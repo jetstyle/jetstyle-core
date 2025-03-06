@@ -1,0 +1,24 @@
+{
+  "name": "@jetstyle/server-auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@jetstyle/utils": "^1.0.0",
+    "jose": "^5.9.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3",
+    "@jetstyle/eslint-config": "^1.0.0",
+    "@jetstyle/typescript-config": "^1.0.0"
+  }
+}

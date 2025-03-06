@@ -1,0 +1,6 @@
+{
+  "name": "@jetstyle/core-hub-deps",
+  "scripts": {
+    "core:dev": "sh dev.sh"
+  }
+}

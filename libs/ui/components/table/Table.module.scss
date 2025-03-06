@@ -1,0 +1,10 @@
+.row {
+  cursor: pointer;
+  user-select: text!important;
+    &:hover {
+      td {
+        --tw-bg-opacity: 1;
+        background-color: var(--fallback-b2, oklch(var(--b2) / var(--tw-bg-opacity)));
+      }
+    }
+}

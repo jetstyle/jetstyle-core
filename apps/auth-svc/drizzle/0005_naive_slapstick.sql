@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "scopes" jsonb DEFAULT '[]'::jsonb;

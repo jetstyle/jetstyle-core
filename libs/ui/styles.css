@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html:has(.drawer-toggle:checked) {
+    scrollbar-gutter: auto;
+}
+
+body:has(.custom-modal) .actions {
+    position: static;
+}

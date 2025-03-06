@@ -1,0 +1,38 @@
+.custom-modal {
+  $root: &;
+
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: .3s linear enter;
+  background-color: rgba(#000000, .85);
+
+  &__container {
+    display: flex;
+    flex-direction: column;
+    max-height: 95%;
+    max-width: 95%;
+    min-height: 150px;
+    min-width: 300px;
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  &__inner-container {
+    overflow: auto;
+  }
+
+  &__buttons-block{
+    display: flex;
+    margin-left: auto;
+    margin-bottom: 8px;
+    order: -1;
+    align-items: center;
+  }
+}

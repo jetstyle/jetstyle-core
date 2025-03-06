@@ -1,0 +1,35 @@
+{
+  "name": "@jetstyle/utils",
+  "version": "1.0.0",
+  "description": "",
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
+    },
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@jetstyle/eslint-config": "^1.0.0",
+    "@jetstyle/typescript-config": "^1.0.0",
+    "@types/lodash": "^4.17.10",
+    "@types/node": "^12.0.10",
+    "eslint": "^8.57.0",
+    "superagent": "^9.0.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.0"
+  }
+}

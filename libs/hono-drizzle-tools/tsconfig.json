@@ -1,0 +1,8 @@
+{
+  "extends": "@jetstyle/typescript-config/lib-emit.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

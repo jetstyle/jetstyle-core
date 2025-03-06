@@ -1,0 +1,48 @@
+{
+  "name": "@jetstyle/auth-svc",
+  "version": "1.0.0",
+  "exports": {
+    ".": "./dist/main.js",
+    "./db": "./dist/db.js",
+    "./schema": "./dist/schema.js"
+  },
+  "description": "JetStyle oidc-based authorization service",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint src/**.ts",
+    "lint:fix": "eslint --fix src/**.ts",
+    "core:dev": "tsx watch src/index.ts",
+    "generate-keys": "tsx src/tools/keys.ts",
+    "create-migration": "npx drizzle-kit generate:pg"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@jetstyle/server-auth": "^1.0.0",
+    "@jetstyle/eslint-config": "^1.0.0",
+    "@jetstyle/hono-drizzle-tools": "^1.0.0",
+    "@jetstyle/typescript-config": "^1.0.0",
+    "@jetstyle/utils": "^1.0.0",
+    "@types/bcrypt": "^5.0.2",
+    "drizzle-kit": "0.20.17",
+    "eslint": "^8.53.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@jetstyle/server-auth": "^1.0.0",
+    "@hono/node-server": "^1.11.1",
+    "@hono/swagger-ui": "^0.3.0",
+    "@hono/zod-openapi": "^0.14.7",
+    "@hono/zod-validator": "^0.2.2",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "0.30.10",
+    "drizzle-zod": "0.5.1",
+    "jose": "^5.9.2",
+    "postgres": "^3.4.4"
+  }
+}

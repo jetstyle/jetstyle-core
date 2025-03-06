@@ -1,0 +1,12 @@
+{
+  "extends": "@jetstyle/typescript-config/lib.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "moduleResolution": "node16",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

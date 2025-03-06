@@ -1,0 +1,21 @@
+version: '3.4'
+
+services:
+  oss-core-hub-postgres:
+    container_name: oss-core-hub-postgres
+    image: postgres:15-bullseye
+    restart: always
+    environment:
+      POSTGRES_USER: ${PG__USERNAME}
+      POSTGRES_DB: ${PG__DATABASE}
+      POSTGRES_PASSWORD: ${PG__PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - 5445:5432
+    volumes:
+      - ${CONTAINER_PG_DATA}/pgdata:/var/lib/postgresql/data/pgdata
+
+networks:
+  default:
+    external:
+      name: oss_core_hub_network

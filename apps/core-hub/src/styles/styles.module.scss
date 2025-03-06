@@ -1,0 +1,27 @@
+.scroll::-webkit-scrollbar {
+   width: 6px;
+   height: 8px;
+   background-color: transparent;
+   cursor: pointer;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+   border-radius: 6px;
+   height: 50%;
+   background-color: var(--fallback-bc,oklch(var(--bc)/0.2))!important;
+   cursor: pointer;
+}
+
+.loading_anim {
+   display:inline-block;
+   font-family: monospace;
+   font-size: 14px;
+   clip-path: inset(0 3ch 0 0);
+   animation: l 2s steps(4) infinite;
+}
+
+@keyframes l {
+   to {
+      clip-path: inset(0 -1ch 0 0)
+   }
+}
