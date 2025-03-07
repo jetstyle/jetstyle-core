@@ -61,6 +61,8 @@ Once running locally, Swagger UI is available at `http://localhost:8092/swagger`
 
 Admin UI is available at `http://localhost:3000/ru/tenant/tracker/login`
 
+The local test environment is configured in such a way that you can register a new user in any tenant, including tracker. For testing, simply register in any tenant and start creating tasks.
+
 ## Migrations
 
 Migrations are performed in `apps/<service name>` using drizzle kit. To enable this, create a copy of the `.env` file inside `apps/<service name>/.env` with only the database settings:
