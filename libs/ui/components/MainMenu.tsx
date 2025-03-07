@@ -18,8 +18,6 @@ import ChallengeIcon from './icons/ChallengeIcon'
 import MenuIcon from './icons/Menu'
 import ChatsIcon from './icons/chats-icon'
 
-
-
 type TypeMainMenu = {
   isShowMenu?: boolean ;
   children?: ReactNode;

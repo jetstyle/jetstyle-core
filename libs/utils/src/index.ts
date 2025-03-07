@@ -79,3 +79,10 @@ export function arrayIntersection<T>(arr1: Array<T>, arr2: Array<T>): Array<T> {
   const set2 = new Set(arr2)
   return arr1.filter(item => set2.has(item))
 }
+
+export type TListResponse<T> = {
+  offset: number
+  limit: number
+  total: number
+  result: Array<T>
+}

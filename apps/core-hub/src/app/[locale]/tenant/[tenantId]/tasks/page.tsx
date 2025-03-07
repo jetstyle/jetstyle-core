@@ -1,11 +1,16 @@
 'use client'
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
+
+import { type TListResponse } from "@jetstyle/utils"
+import { fetchResource } from "@jetstyle/ui/helpers/api"
+
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetTrigger } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+import { type CTask } from "@/types"
 
 export default function TasksPage() {
   const [data, setData] = useState({
@@ -25,6 +30,24 @@ export default function TasksPage() {
   const [selectedCard, setSelectedCard] = useState<{ col: string; id: string } | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
+
+  const loadCards = async () => {
+    const tasksResult = await fetchResource<TListResponse<CTask>>({
+      apiService: 'taskTracker',
+      apiPath: '/tasks',
+    })
+
+    if (tasksResult.err !== null) {
+      // TODO: show error
+    } else {
+      // TODO: put data to setData
+      console.log('tasks', tasksResult.value)
+    }
+  }
+
+  useEffect(() => {
+    loadCards()
+  }, [])
 
   const handleDragStart = (e: React.DragEvent, col: string, cardId: string) => {
     e.dataTransfer.setData("text/plain", JSON.stringify({ col, cardId }))
