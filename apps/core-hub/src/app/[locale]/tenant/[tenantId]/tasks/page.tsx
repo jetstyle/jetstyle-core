@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 
 import { type TListResponse } from "@jetstyle/utils"
-import { fetchResource } from "@jetstyle/ui/helpers/api"
+import { fetchResource, postResource, patchResource, deleteResource } from "@jetstyle/ui/helpers/api"
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,16 +32,28 @@ export default function TasksPage() {
   const [editDescription, setEditDescription] = useState("")
 
   const loadCards = async () => {
-    const tasksResult = await fetchResource<TListResponse<CTask>>({
+    const tasks = await fetchResource<TListResponse<CTask>>({
       apiService: 'taskTracker',
       apiPath: '/tasks',
     })
 
-    if (tasksResult.err !== null) {
+    if (tasks.err !== null) {
       // TODO: show error
     } else {
       // TODO: put data to setData
-      console.log('tasks', tasksResult.value)
+      console.log('tasks', tasks.value)
+
+      const data = (tasks: CTask[]) => tasks.map(task => ({
+        id: task.uuid,
+        text: task.title,
+        description: task.description || ""
+      }))
+
+      setData({
+        todo: data(tasks.value.result.filter(t => t.status == 'todo')),
+        inProgress: data(tasks.value.result.filter(t => t.status == 'inProgress')),
+        done: data(tasks.value.result.filter(t => t.status == 'done'))
+      })
     }
   }
 
@@ -83,22 +95,73 @@ export default function TasksPage() {
     setDraggedCard(null)
   }
 
-  const handleAddCard = (col: string) => {
+  const handleAddCard = async (col: string) => {
     if (!newCardText[col].trim()) return
+
+    const result = await postResource<CTask>({
+      apiService: 'taskTracker',
+      apiPath: '/tasks',
+      toSubmit: {
+        tenant: "tracker",
+        status: col,
+        title: newCardText[col]
+      },
+    })
+
+    if (!('value' in result))
+    return console.error('Ошибка создания карточки:', result)
+
     setData(prev => ({
       ...prev,
-      [col]: [...prev[col], { id: Date.now().toString(), text: newCardText[col], description: "" }]
+      [col]: [...prev[col], {
+        id: result.value.uuid,
+        text: result.value.title,
+        description: result.value.description,
+      }],
     }))
+
     setNewCardText(prev => ({ ...prev, [col]: "" }))
+  }
+
+  const handleUpdateCard = async (
+    cardId: string,
+    newTitle: string,
+    newDescription: string, status: string
+  ) => {
+    const result = await patchResource<CTask>({
+      apiService: 'taskTracker',
+      apiPath: '/tasks',
+      resourceId: cardId,
+      toSubmit: {
+        title: newTitle,
+        description: newDescription,
+        tenant: "tracker",
+        status,
+      }
+    })
+
+    return !result.err
   }
 
   const handleCardClick = (col: string, id: string) => {
     setSelectedCard({ col, id })
+
     const card = data[col].find(item => item.id === id)
+
     if (card) {
       setEditTitle(card.text)
       setEditDescription(card.description)
     }
+  }
+
+  const handleDeleteCard = async (cardId: string) => {
+    const result = await deleteResource({
+      apiService: 'taskTracker',
+      apiPath: '/tasks',
+      resourceId: cardId
+    })
+
+    return !result.err
   }
 
   const columns = Object.keys(data)
@@ -154,20 +217,46 @@ export default function TasksPage() {
           </div>
           <SheetFooter>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (!selectedCard) return
-                const { col, id } = selectedCard
-                setData(prev => {
-                  const updated = { ...prev }
-                  updated[col] = updated[col].map(card =>
-                    card.id === id ? { ...card, text: editTitle, description: editDescription } : card
-                  )
-                  return updated
-                })
-                setSelectedCard(null)
+
+                const { id, col } = selectedCard
+                const success = await handleUpdateCard(id, editTitle, editDescription, col)
+
+                if (success) {
+                  setData(prev => ({
+                    ...prev,
+                    [selectedCard.col]: prev[selectedCard.col].map(card =>
+                      card.id == id
+                        ? { ...card, text: editTitle, description: editDescription }
+                        : card
+                    ),
+                  }))
+
+                  setSelectedCard(null)
+                }
               }}
             >
               Save
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!selectedCard) return
+
+                const success = await handleDeleteCard(selectedCard.id)
+
+                if (success) {
+                  setData(prev => ({
+                    ...prev,
+                    [selectedCard.col]: prev[selectedCard.col].filter(card => card.id != selectedCard.id)
+                  }))
+
+                  setSelectedCard(null)
+                }
+              }}
+            >
+              Delete
             </Button>
           </SheetFooter>
         </SheetContent>
