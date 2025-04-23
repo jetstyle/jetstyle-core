@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ADD COLUMN "tenant" varchar(256) NOT NULL;
