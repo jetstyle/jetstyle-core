@@ -7,6 +7,7 @@ import { sleep } from '@jetstyle/utils'
 
 import { config } from './config.js'
 import { applyMigrations, createDbConnection } from './db.js'
+import { projectsApp } from './routes/projects.js'
 import { tasksApp } from './routes/tasks.js'
 
 async function main() {
@@ -15,8 +16,10 @@ async function main() {
   createDbConnection(config)
   const app = new OpenAPIHono()
   app.use(cors())
-  // ...existing code...
-  app.route('/task-tracker/tasks', tasksApp)
+
+  app
+    .route('/task-tracker/tasks', tasksApp)
+    .route('/task-tracker/projects', projectsApp)
   app.get(
     '/swagger',
     swaggerUI({

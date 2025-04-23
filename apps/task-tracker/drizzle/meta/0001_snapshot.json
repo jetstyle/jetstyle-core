@@ -1,10 +1,8 @@
 {
-  "id": "1446f4ca-5d14-4d3f-be8f-df8ab742b19d",
-  "prevId": "0d774455-f177-4e97-bb2c-c3e6fc8ba8fc",
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "tables": {
-    "tasks": {
+    "public.tasks": {
       "name": "tasks",
       "schema": "",
       "columns": {
@@ -74,14 +72,23 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "isRLSEnabled": false,
+      "checkConstraints": {}
     }
   },
   "enums": {},
   "schemas": {},
   "_meta": {
-    "columns": {},
     "schemas": {},
-    "tables": {}
-  }
+    "tables": {},
+    "columns": {}
+  },
+  "id": "1446f4ca-5d14-4d3f-be8f-df8ab742b19d",
+  "prevId": "0d774455-f177-4e97-bb2c-c3e6fc8ba8fc",
+  "sequences": {},
+  "policies": {},
+  "views": {},
+  "roles": {}
 }

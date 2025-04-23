@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    container: node:22-alpine
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Restore npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install deps & turbo
+        run: |
+          npm ci
+          npm i -g turbo@1.12.4
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint

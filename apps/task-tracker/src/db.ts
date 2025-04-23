@@ -2,8 +2,9 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
-import * as schema from './schema.js'
+
 import type { TaskTrackerConfig } from './config.js'
+import * as schema from './schema.js'
 
 let GLOBAL_CONNECTION: PostgresJsDatabase<typeof schema> | undefined
 
