@@ -7,13 +7,14 @@ on:
 jobs:
   build-and-lint:
     runs-on: ubuntu-latest
-    container: node:22-alpine
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup nodejs
+        uses: actions/setup-node@v4
         with:
-          submodules: recursive
+          node-version: '20'
 
       - name: Restore npm cache
         uses: actions/cache@v4
