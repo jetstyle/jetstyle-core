@@ -13,10 +13,15 @@
     "build:watch": "concurrently \"tsc -w\" \"tailwindcss -i ./styles.css -o ./dist/index.css --watch\""
   },
   "dependencies": {
+    "classnames": "^2.5.1",
     "crypto-js": "^4.2.0",
     "daisyui": "^4.4.20",
+    "dayjs": "^1.11.13",
     "jsonwebtoken": "^9.0.2",
-    "superagent": "^9.0.2"
+    "lucide-react": "^0.503.0",
+    "slugify": "^1.6.6",
+    "superagent": "^9.0.2",
+    "swr": "^2.3.3"
   },
   "devDependencies": {
     "@jetstyle/config-tailwind": "^1.0.0",
