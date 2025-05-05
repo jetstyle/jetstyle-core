@@ -8,9 +8,15 @@ import { fetchResource, postResource, patchResource, deleteResource } from "@jet
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Sheet,  SheetContent,  SheetHeader,  SheetTitle,  SheetDescription,  SheetFooter } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { type CTask } from "@/types"
+
+type CMiniTasksData = {
+  todo: CMiniTask[]
+  inProgress: CMiniTask[]
+  done: CMiniTask[]
+};
 
 type CMiniTask = {
   id: string
@@ -28,7 +34,7 @@ function convertTask(task: CTask): CMiniTask {
 }
 
 export default function TasksPage() {
-  const [data, setData] = useState<{ [key: string]: CMiniTask[] }>({});
+  const [data, setData] = useState<CMiniTasksData>({ todo: [], inProgress: [], done: [] });
   const [dataError, setDataError] = useState<string | null>(null);
 
   const [newCardText, setNewCardText] = useState({ todo: "", inProgress: "", done: "" })
@@ -41,6 +47,10 @@ export default function TasksPage() {
     const tasksResult = await fetchResource<TListResponse<CTask>>({
       apiService: 'taskTracker',
       apiPath: '/tasks',
+      query: {
+        sortby: 'createdAt',
+        sortdir: 'asc',
+      }
     })
 
     if (tasksResult.err !== null) {
@@ -52,14 +62,14 @@ export default function TasksPage() {
         todo: [],
         inProgress: [],
         done: [],
-      };
+      } as CMiniTasksData;
       for (const task of tasksResult.value.result) {
         const parsedTask = convertTask(task);
 
-        if (!(task.status in parsed)) {
-          parsed[task.status] = [parsedTask];
+        if (task.status in parsed) {
+          (parsed[task.status] as CMiniTask[]).push(parsedTask);
         } else {
-          parsed[task.status].push(parsedTask);
+          parsed[task.status] = [parsedTask];
         }
       }
 
@@ -85,14 +95,14 @@ export default function TasksPage() {
     setData(prev => {
       const updated = { ...prev }
       // Remove from source column
-      const sourceItems = [...updated[draggedCard.col]!]
+      const sourceItems = [...updated[draggedCard.col]]
       const draggedIndex = sourceItems.findIndex(c => c.id === draggedCard.cardId)
       const [removed] = sourceItems.splice(draggedIndex, 1)
       updated[draggedCard.col] = sourceItems
       // Insert at target index in the new column
-      const targetItems = [...updated[col]!]
+      const targetItems = [...updated[col]]
       const targetIndex = targetItems.findIndex(c => c.id === targetCardId)
-      targetItems.splice(targetIndex, 0, removed!)
+      targetItems.splice(targetIndex, 0, removed)
       updated[col] = targetItems
       return updated
     })
@@ -104,7 +114,7 @@ export default function TasksPage() {
     e.preventDefault()
     // TODO: do not editTask() if targetCol === previousCol
     if (draggedCard && data[targetCol]) {
-      const task = data[targetCol].find(card => card.id === draggedCard.cardId)!;
+      const task = data[targetCol].find(card => card.id === draggedCard.cardId);
       editTask(targetCol, draggedCard.cardId, task.text, task.description);
     }
     setDraggedCard(null)
@@ -115,7 +125,7 @@ export default function TasksPage() {
     const newCard = { id: Date.now().toString(), isTemp: true, text: newCardText[col], description: "" };
     setData(prev => ({
       ...prev,
-      [col]: [...prev[col]!, newCard]
+      [col]: [...prev[col], newCard]
     }))
     setNewCardText(prev => ({ ...prev, [col]: "" }));
     createTask(col, newCard.id, newCardText[col], newCard.text);
@@ -123,7 +133,7 @@ export default function TasksPage() {
 
   const handleCardClick = (col: string, id: string) => {
     setSelectedCard({ col, id })
-    const card = data[col]!.find(item => item.id === id)
+    const card = data[col].find(item => item.id === id)
     if (card) {
       setEditTitle(card.text)
       setEditDescription(card.description)
@@ -147,12 +157,12 @@ export default function TasksPage() {
 
       setData(prev => ({
         ...prev,
-        [col]: prev[col]!.filter(task => task.id !== tempId)
+        [col]: prev[col].filter(task => task.id !== tempId)
       }));
     } else {
       setData(prev => ({
         ...prev,
-        [col]: prev[col]!.reduce((acc, task) => {
+        [col]: prev[col].reduce((acc, task) => {
           if (task.id === tempId) {
             acc.push(convertTask(createTaskResult.value));
           } else {
@@ -226,7 +236,7 @@ export default function TasksPage() {
           className="flex flex-col w-1/3 p-2 space-y-2 border rounded-md bg-white/80"
         >
           <h2 className="text-xl font-bold capitalize">{col.replace(/([A-Z])/g, " $1")}</h2>
-          {data[col]!.map(item => (
+          {data[col].map(item => (
             <Card
               key={item.id}
               className="p-2 cursor-move hover:bg-gray-100 transition-colors"
@@ -273,7 +283,7 @@ export default function TasksPage() {
                 const { col, id } = selectedCard
                 setData(prev => {
                   const updated = { ...prev }
-                  updated[col] = updated[col]!.map(card =>
+                  updated[col] = updated[col].map(card =>
                     card.id === id ? { ...card, text: editTitle, description: editDescription } : card
                   )
                   return updated
@@ -291,7 +301,7 @@ export default function TasksPage() {
                 const { col, id } = selectedCard
                 setData(prev => {
                   const updated = { ...prev };
-                  updated[col] = updated[col]!.filter(card => card.id !== id);
+                  updated[col] = updated[col].filter(card => card.id !== id);
                   return updated;
                 });
                 setSelectedCard(null)
