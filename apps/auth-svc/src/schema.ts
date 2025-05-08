@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { pgTable, serial, text, varchar, timestamp, integer, jsonb } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, varchar, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core'
 import {
   createInsertSchema,
   createSelectSchema
@@ -146,3 +146,44 @@ export type AuthCode = typeof TableAuthCodes.$inferSelect
 export type NewAuthCodeRequest = z.infer<typeof AuthCodeInsertSchema>
 
 export const AuthCodeSelectSchema = createSelectSchema(TableAuthCodes)
+
+export const TableBasicAuthAccounts = pgTable('basic_auth_accounts', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  login: varchar('login', { length: 256 }).notNull().unique(),
+  password: varchar('password', { length: 256 }).notNull(),
+
+  lastLoginAt: timestamp('last_login_at'),
+  loginAttempts: integer('login_attempts').default(0),  // rate limiting, brute-force protection
+  isLocked: boolean('is_locked').default(false),        // account lockout mechanism
+  isActive: boolean('is_active').default(true),         // allows soft deactivation
+  role: varchar('role', { length: 64 }).default('user'),
+  tenant: varchar('tenant', { length: 256 }),
+  metadata: jsonb('metadata').$type<Record<string, any>>().default({})
+})
+
+export const BasicAuthAccountInsertSchema = createInsertSchema(TableBasicAuthAccounts)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+    lastLoginAt: true,
+    loginAttempts: true,
+    isLocked: true,
+    isActive: true,
+    role: true,
+    metadata: true
+  })
+
+export type NewBasicAuthAccount = typeof TableBasicAuthAccounts.$inferInsert
+export type BasicAuthAccount = typeof TableBasicAuthAccounts.$inferSelect
+export type NewBasicAuthAccountRequest = z.infer<typeof BasicAuthAccountInsertSchema>
+
+export const BasicAuthAccountSelectSchema = createSelectSchema(TableBasicAuthAccounts)
+  .omit({
+    password: true
+  })

@@ -50,6 +50,13 @@
       "when": 1740394064124,
       "tag": "0006_large_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1746711659920,
+      "tag": "0007_silky_big_bertha",
+      "breakpoints": true
     }
   ]
 }
