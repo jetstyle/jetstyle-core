@@ -1,5 +1,5 @@
 {
-  "id": "851e2595-44f6-4716-82cc-a926fbbb6eec",
+  "id": "bebf5ff0-410d-45a8-8825-6021a733768e",
   "prevId": "615a6352-3893-4b54-81ee-3a5866f7ea4d",
   "version": "7",
   "dialect": "postgresql",
@@ -103,11 +103,17 @@
           "primaryKey": false,
           "notNull": true
         },
-        "password": {
-          "name": "password",
+        "password_hash": {
+          "name": "password_hash",
           "type": "varchar(256)",
           "primaryKey": false,
           "notNull": true
+        },
+        "tenant": {
+          "name": "tenant",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false
         },
         "last_login_at": {
           "name": "last_login_at",
@@ -122,30 +128,16 @@
           "notNull": false,
           "default": 0
         },
-        "is_locked": {
-          "name": "is_locked",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": true
-        },
-        "role": {
-          "name": "role",
+        "status": {
+          "name": "status",
           "type": "varchar(64)",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'user'"
+          "notNull": true,
+          "default": "'active'"
         },
-        "tenant": {
-          "name": "tenant",
-          "type": "varchar(256)",
+        "roles": {
+          "name": "roles",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },

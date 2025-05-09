@@ -1,5 +1,5 @@
 import { z } from '@hono/zod-openapi'
-import { pgTable, serial, text, varchar, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, varchar, timestamp, integer, jsonb } from 'drizzle-orm/pg-core'
 import {
   createInsertSchema,
   createSelectSchema
@@ -154,14 +154,17 @@ export const TableBasicAuthAccounts = pgTable('basic_auth_accounts', {
   updatedAt: timestamp('updated_at').defaultNow(),
 
   login: varchar('login', { length: 256 }).notNull().unique(),
-  password: varchar('password', { length: 256 }).notNull(),
+  passwordHash: varchar('password_hash', { length: 256 }).notNull(),
 
-  lastLoginAt: timestamp('last_login_at'),
-  loginAttempts: integer('login_attempts').default(0),  // rate limiting, brute-force protection
-  isLocked: boolean('is_locked').default(false),        // account lockout mechanism
-  isActive: boolean('is_active').default(true),         // allows soft deactivation
-  role: varchar('role', { length: 64 }).default('user'),
   tenant: varchar('tenant', { length: 256 }),
+  lastLoginAt: timestamp('last_login_at'),
+  loginAttempts: integer('login_attempts').default(0),
+  status: varchar('status', {
+    length: 64,
+    enum: ['active', 'locked', 'disabled']
+  }).notNull().default('active'),
+
+  roles: jsonb('roles').$type<Record<string, any>>(),
   metadata: jsonb('metadata').$type<Record<string, any>>().default({})
 })
 
@@ -173,9 +176,6 @@ export const BasicAuthAccountInsertSchema = createInsertSchema(TableBasicAuthAcc
     updatedAt: true,
     lastLoginAt: true,
     loginAttempts: true,
-    isLocked: true,
-    isActive: true,
-    role: true,
     metadata: true
   })
 
@@ -185,5 +185,5 @@ export type NewBasicAuthAccountRequest = z.infer<typeof BasicAuthAccountInsertSc
 
 export const BasicAuthAccountSelectSchema = createSelectSchema(TableBasicAuthAccounts)
   .omit({
-    password: true
+    passwordHash: true
   })
