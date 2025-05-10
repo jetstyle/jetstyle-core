@@ -9,6 +9,7 @@ import { sleep } from '@jetstyle/utils'
 import { config } from './config.js'
 import { applyMigrations, createDbConnection } from './db.js'
 import { AuthServer } from './model.js'
+import { accountsApp } from './routes/accounts.js'
 import { authRoutes } from './routes/auth.js'
 import { codesRoutes } from './routes/codes.js'
 import { tenantsApp } from './routes/tenants.js'
@@ -41,6 +42,7 @@ async function startServer(authServer: AuthServer) {
     .route('/auth/codes', codesRoutes)
     .route('/auth/users', usersApp)
     .route('/auth/tenants', tenantsApp)
+    .route('/auth/accounts', accountsApp)
     .get(
       '/auth/swagger',
       swaggerUI({
