@@ -15,7 +15,7 @@
     "lint:fix": "eslint --fix src/**.ts",
     "core:dev": "tsx watch src/index.ts",
     "generate-keys": "tsx src/tools/keys.ts",
-    "create-migration": "npx drizzle-kit generate:pg"
+    "create-migration": "npx drizzle-kit generate"
   },
   "author": "",
   "license": "UNLICENSED",
