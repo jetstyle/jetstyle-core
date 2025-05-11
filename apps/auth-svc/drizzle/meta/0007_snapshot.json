@@ -1,5 +1,5 @@
 {
-  "id": "bebf5ff0-410d-45a8-8825-6021a733768e",
+  "id": "7c67fdcb-c275-4dbe-a7e3-16511a7f2a3a",
   "prevId": "615a6352-3893-4b54-81ee-3a5866f7ea4d",
   "version": "7",
   "dialect": "postgresql",
@@ -139,14 +139,8 @@
           "name": "roles",
           "type": "jsonb",
           "primaryKey": false,
-          "notNull": false
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "primaryKey": false,
           "notNull": false,
-          "default": "'{}'::jsonb"
+          "default": "'[]'::jsonb"
         }
       },
       "indexes": {},

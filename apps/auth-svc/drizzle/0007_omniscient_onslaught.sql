@@ -9,7 +9,6 @@ CREATE TABLE "basic_auth_accounts" (
 	"last_login_at" timestamp,
 	"login_attempts" integer DEFAULT 0,
 	"status" varchar(64) DEFAULT 'active' NOT NULL,
-	"roles" jsonb,
-	"metadata" jsonb DEFAULT '{}'::jsonb,
+	"roles" jsonb DEFAULT '[]'::jsonb,
 	CONSTRAINT "basic_auth_accounts_login_unique" UNIQUE("login")
 );

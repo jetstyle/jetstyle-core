@@ -74,7 +74,7 @@ export const accountsApp = app.openapi(
       query.tenant = permission.tenant
     }
 
-    const resp = await crudList(db, TableBasicAuthAccounts, query)
+    const resp = await crudList<BasicAuthAccount>(db, TableBasicAuthAccounts, query)
     return c.json(resp, 200)
   }
 )
