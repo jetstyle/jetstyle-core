@@ -23,6 +23,7 @@ import {
   TableRefreshTokens,
   TableTenants,
   TableAuthCodes,
+  TableBasicAuthAccounts,
 } from './schema.js'
 import type { AuthServerConfig } from './types.js'
 
@@ -604,4 +605,38 @@ export async function getChildTenants(parentTenantName: string): Promise<Array<T
     return tenants
   }
   return null
+}
+
+export async function getBasicAuthAccountByLogin(login: string) {
+  const db = getDbConnection()
+  const accounts = await db.select()
+    .from(TableBasicAuthAccounts)
+    .where(eq(TableBasicAuthAccounts.login, login))
+    .limit(1)
+
+  return accounts[0] ?? null
+}
+
+export async function incrementLoginAttempt(uuid: string, attempts: number) {
+  const db = getDbConnection()
+  await db.update(TableBasicAuthAccounts)
+    .set({ loginAttempts: attempts + 1 })
+    .where(eq(TableBasicAuthAccounts.uuid, uuid))
+}
+
+export async function resetLoginAttempt(uuid: string) {
+  const db = getDbConnection()
+  await db.update(TableBasicAuthAccounts)
+    .set({
+      loginAttempts: 0,
+      lastLoginAt: new Date()
+    })
+    .where(eq(TableBasicAuthAccounts.uuid, uuid))
+}
+
+export async function lockBasicAuthAccount(uuid: string) {
+  const db = getDbConnection()
+  await db.update(TableBasicAuthAccounts)
+    .set({ status: 'locked' })
+    .where(eq(TableBasicAuthAccounts.uuid, uuid))
 }

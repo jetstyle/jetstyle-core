@@ -1,5 +1,6 @@
 import { type KeyLike, jwtVerify, importSPKI } from 'jose'
 
+import { getBasicAuthAccountByLogin, lockBasicAuthAccount, incrementLoginAttempt, resetLoginAttempt } from '@jetstyle/auth-svc'
 import { TResult, Ok, Err, arrayIntersection } from '@jetstyle/utils'
 
 import config from './config.js'
@@ -166,4 +167,41 @@ export function getPermissionsByBasicAuth(basicAuthHeader: string): Permission {
     return { level: 'allowed' }
   }
   return { level: 'denied' }
+}
+
+const MAX_ATTEMPTS = 5
+
+export async function getPermissionsByBasicAuthV2(basicAuthHeader: string): Permission {
+  if (!basicAuthHeader) {
+    return { level: 'denied' }
+  }
+
+  const [type, credentials] = basicAuthHeader.split(' ')
+  if (type !== 'Basic' || !credentials) {
+    return { level: 'denied' }
+  }
+  const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
+  const [login, password] = decoded.split(':')
+
+  const account = await getBasicAuthAccountByLogin(login)
+  if (!account) {
+    return { level: 'denied' }
+  }
+  if (account.status !== 'active') {
+    return { level: 'denied' }
+  }
+  if (account.loginAttempt >= MAX_ATTEMPTS) {
+    await lockBasicAuthAccount(account.id)
+    return { level: 'denied' }
+  }
+
+  const isValidPassword = await authServer.comparePassword(password, account.password)
+  if (!isValidPassword) {
+    await incrementLoginAttempt(account.uuid, account.loginAttempt)
+    return { level: 'denied' }
+  }
+
+  await resetLoginAttempt(account.uuid)
+
+  return { level: 'allowed' }
 }
