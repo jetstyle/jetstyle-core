@@ -1,5 +1,5 @@
 {
-  "id": "7c67fdcb-c275-4dbe-a7e3-16511a7f2a3a",
+  "id": "4d019dad-c0e8-448b-8aa8-9ed6719c4038",
   "prevId": "615a6352-3893-4b54-81ee-3a5866f7ea4d",
   "version": "7",
   "dialect": "postgresql",
@@ -125,7 +125,7 @@
           "name": "login_attempts",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "default": 0
         },
         "status": {

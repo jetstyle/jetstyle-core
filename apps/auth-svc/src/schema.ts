@@ -166,7 +166,7 @@ export const TableBasicAuthAccounts = pgTable('basic_auth_accounts', {
 
   tenant: varchar('tenant', { length: 256 }),
   lastLoginAt: timestamp('last_login_at'),
-  loginAttempts: integer('login_attempts').default(0),
+  loginAttempts: integer('login_attempts').notNull().default(0),
   status: varchar('status', {
     length: 64,
     enum: ['active', 'locked', 'disabled']
