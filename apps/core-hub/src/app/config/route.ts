@@ -1,5 +1,9 @@
 const mainMenu = [
   {
+    label: "Accounts",
+    path: "/accounts"
+  },
+  {
     label: "Users",
     path: "/users"
   },
