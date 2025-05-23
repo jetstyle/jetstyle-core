@@ -1,7 +1,7 @@
-'use client';
+'use client'
 
 import { type ResourceDescription } from '@jetstyle/ui/types/types'
-import ResourcePage from "@jetstyle/ui/components/ResourcePage";
+import ResourcePage from "@jetstyle/ui/components/ResourcePage"
 
 const resourceDescription: ResourceDescription = {
     needTenant: true,
@@ -53,9 +53,9 @@ const resourceDescription: ResourceDescription = {
     ],
     isEditable: true,
     apiService: "auth",
-    apiPath: "/accounts",
-    listName: "Accounts",
-    name: "Account",
+    apiPath: "/basic-auth-accounts",
+    listName: "Basic auth accounts",
+    name: "Basic auth account",
 }
 
 export default function AccountsPage () {
