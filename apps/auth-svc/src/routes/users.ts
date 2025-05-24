@@ -28,7 +28,7 @@ import {
 
 const app = new OpenAPIHono()
 
-export const usersApp = app.openapi(
+export const usersRoutes = app.openapi(
   createRoute({
     method: 'get',
     tags: ['Users'],

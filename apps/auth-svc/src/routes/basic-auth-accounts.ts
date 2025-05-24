@@ -35,7 +35,7 @@ const updateBasicAuthAccountSchema = z.object({
 
 const app = new OpenAPIHono()
 
-export const accountsApp = app.openapi(
+export const basicAuthAccountsRoutes = app.openapi(
   createRoute({
     method: 'get',
     tags: ['Basic auth accounts'],
@@ -263,5 +263,3 @@ export const accountsApp = app.openapi(
   )
 
 // TODO - add endpoints 4 - update account status && record login attempt && reset login attempts
-
-export default app

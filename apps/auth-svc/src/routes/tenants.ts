@@ -28,7 +28,7 @@ import {
 
 const app = new OpenAPIHono()
 
-export const tenantsApp = app.openapi(
+export const tenantsRoutes = app.openapi(
   createRoute({
     method: 'get',
     tags: ['Tenants'],

@@ -9,11 +9,13 @@ import { sleep } from '@jetstyle/utils'
 import { config } from './config.js'
 import { applyMigrations, createDbConnection } from './db.js'
 import { AuthServer } from './model.js'
-import { accountsApp } from './routes/accounts.js'
-import { authRoutes } from './routes/auth.js'
-import { codesRoutes } from './routes/codes.js'
-import { tenantsApp } from './routes/tenants.js'
-import { usersApp } from './routes/users.js'
+import {
+  authRoutes,
+  codesRoutes,
+  tenantsRoutes,
+  usersRoutes,
+  basicAuthAccountsRoutes
+} from './routes/index.js'
 
 declare module 'hono' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -35,20 +37,13 @@ async function startServer(authServer: AuthServer) {
     credentials: true,
   }))
     .use(authServerMiddleware)
-    .get('/mu', (c) => {
-      return c.json({ hru: 1 })
-    })
+    .get('/mu', (c) => c.json({ hru: 1 }))
     .route('/auth/core', authRoutes)
     .route('/auth/codes', codesRoutes)
-    .route('/auth/users', usersApp)
-    .route('/auth/tenants', tenantsApp)
-    .route('/auth/accounts', accountsApp)
-    .get(
-      '/auth/swagger',
-      swaggerUI({
-        url: '/auth/doc'
-      })
-    )
+    .route('/auth/users', usersRoutes)
+    .route('/auth/tenants', tenantsRoutes)
+    .route('/auth/basic-auth-accounts', basicAuthAccountsRoutes)
+    .get('/auth/swagger', swaggerUI({ url: '/auth/doc' }))
 
   app.doc('/auth/doc', {
     info: {
