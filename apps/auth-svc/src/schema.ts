@@ -183,10 +183,12 @@ export const BasicAuthAccountInsertSchema = createInsertSchema(TableBasicAuthAcc
     updatedAt: true,
     lastLoginAt: true,
     loginAttempts: true,
-    roles: true
+    roles: true,
+    passwordHash: true
   })
   .extend({
-    roles: z.array(z.string()).nullable().optional()
+    roles: z.array(z.string()).nullable().optional(),
+    password: z.string().min(8)
   })
 
 export type NewBasicAuthAccount = typeof TableBasicAuthAccounts.$inferInsert

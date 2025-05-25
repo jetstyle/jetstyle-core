@@ -108,6 +108,8 @@ export const basicAuthAccountsRoutes = app.openapi(
         return c.json(ErrForbidden, 403)
       }
 
+      // TODO - remove passwordHash from the results (zod's omit does not affect query result)
+
       const res = await crudRead<BasicAuthAccount>(db, TableBasicAuthAccounts, uuid)
       if (res) {
         return c.json(res, 200)
@@ -142,6 +144,7 @@ export const basicAuthAccountsRoutes = app.openapi(
     }),
     async (c) => {
       const db = getDbConnection()
+      const authServer = c.get('authServer')
       const body = c.req.valid('json')
 
       const authHeader = c.req.header('Authorization')
@@ -158,9 +161,23 @@ export const basicAuthAccountsRoutes = app.openapi(
         return c.json({ error: 'Login already taken' }, 409)
       }
 
-      const res = await crudCreate<BasicAuthAccount, typeof body>(db, TableBasicAuthAccounts, body)
+      const hashedPasswd = await authServer.hashPassword(body.password)
+      if (hashedPasswd.err !== null) {
+        return c.json(hashedPasswd, 500)
+      }
+
+      // TODO - fix both eslint errs
+
+      const { password, ...rest } = body
+      const prepared = {
+        ...rest,
+        passwordHash: hashedPasswd.value,
+      }
+
+      const res = await crudCreate<BasicAuthAccount, typeof prepared>(db, TableBasicAuthAccounts, prepared)
       if (res) {
-        return c.json(res, 201)
+        const { passwordHash, ...safeResponse } = res
+	      return c.json(safeResponse, 201)
       }
       return c.json(ErrInsertFailed, 500)
     }
@@ -219,6 +236,8 @@ export const basicAuthAccountsRoutes = app.openapi(
           return c.json({ error: 'Login already taken' }, 409)
         }
       }
+
+      // TODO - ensure so that passwordHash can't be updated
 
       const res = await crudUpdatePatch<BasicAuthAccount, typeof body>(db, TableBasicAuthAccounts, uuid, body)
       return c.json(res, 200)
