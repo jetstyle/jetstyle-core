@@ -26,11 +26,9 @@ import {
 
 const updateBasicAuthAccountSchema = z.object({
   login: z.string().optional(),
-  passwordHash: z.string().optional(),
   tenant: z.string().optional(),
   status: z.enum(['active', 'locked', 'disabled']).optional(),
   roles: z.record(z.any()).optional(),
-  metadata: z.record(z.any()).optional(),
 })
 
 const app = new OpenAPIHono()
@@ -74,7 +72,7 @@ export const basicAuthAccountsRoutes = app.openapi(
       query.tenant = permission.tenant
     }
 
-    const resp = await crudList<BasicAuthAccount>(db, TableBasicAuthAccounts, query)
+    const resp = await crudList<BasicAuthAccount>(db, TableBasicAuthAccounts, query, null, ['passwordHash'])
     return c.json(resp, 200)
   }
 )
@@ -108,9 +106,7 @@ export const basicAuthAccountsRoutes = app.openapi(
         return c.json(ErrForbidden, 403)
       }
 
-      // TODO - remove passwordHash from the results (zod's omit does not affect query result)
-
-      const res = await crudRead<BasicAuthAccount>(db, TableBasicAuthAccounts, uuid)
+      const res = await crudRead<BasicAuthAccount>(db, TableBasicAuthAccounts, uuid, ['passwordHash'])
       if (res) {
         return c.json(res, 200)
       }
@@ -166,18 +162,18 @@ export const basicAuthAccountsRoutes = app.openapi(
         return c.json(hashedPasswd, 500)
       }
 
-      // TODO - fix both eslint errs
-
-      const { password, ...rest } = body
       const prepared = {
-        ...rest,
-        passwordHash: hashedPasswd.value,
+        ...body,
+        password: undefined,
+        passwordHash: hashedPasswd.value
       }
+      delete prepared.password
 
       const res = await crudCreate<BasicAuthAccount, typeof prepared>(db, TableBasicAuthAccounts, prepared)
       if (res) {
-        const { passwordHash, ...safeResponse } = res
-	      return c.json(safeResponse, 201)
+        const safeResponse = { ...res } as Partial<BasicAuthAccount>
+        delete safeResponse.passwordHash
+        return c.json(safeResponse, 201)
       }
       return c.json(ErrInsertFailed, 500)
     }
@@ -236,8 +232,6 @@ export const basicAuthAccountsRoutes = app.openapi(
           return c.json({ error: 'Login already taken' }, 409)
         }
       }
-
-      // TODO - ensure so that passwordHash can't be updated
 
       const res = await crudUpdatePatch<BasicAuthAccount, typeof body>(db, TableBasicAuthAccounts, uuid, body)
       return c.json(res, 200)

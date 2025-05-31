@@ -1,5 +1,4 @@
 import { z } from '@hono/zod-openapi'
-import { Table } from 'drizzle-orm'
 import { pgTable, serial, text, varchar, timestamp, integer, jsonb } from 'drizzle-orm/pg-core'
 import {
   createInsertSchema,
@@ -203,18 +202,3 @@ export const BasicAuthAccountSelectSchema = createSelectSchema(TableBasicAuthAcc
   .extend({
     roles: z.array(z.string()).nullable().optional()
   })
-
-export function selectOmit<T extends Table>(
-  table: T,
-  omitKeys: Array<keyof T['_']['columns']>
-) {
-  const allColumns = table._.columns
-  const selected: Record<string, any> = {}
-
-  for (const key in allColumns) {
-    if (!omitKeys.includes(key as keyof typeof allColumns)) {
-      selected[key] = allColumns[key]
-    }
-  }
-  return selected
-}
