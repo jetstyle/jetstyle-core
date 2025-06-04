@@ -51,6 +51,8 @@ export const UserSelectSchema = createSelectSchema(TableUsers)
     scopes: z.array(z.string()).nullable().optional()
   })
 
+// ****************************************************************************
+
 export const TableRefreshTokens = pgTable('refresh_tokens', {
   id: serial('id').primaryKey(),
   uuid: varchar('uuid', { length: 256 }).notNull(),
@@ -84,6 +86,8 @@ export type RefreshToken = typeof TableRefreshTokens.$inferSelect
 export type NewRefreshTokenRequest = z.infer<typeof RefreshTokenInsertSchema>
 
 export const RefreshTokenSelectSchema = createSelectSchema(TableRefreshTokens)
+
+// ****************************************************************************
 
 export const TableTenants = pgTable('tenants', {
   id: serial('id').primaryKey(),
@@ -120,6 +124,8 @@ export type NewTenantRequest = z.infer<typeof TenantInsertSchema>
 
 export const TenantSelectSchema = createSelectSchema(TableTenants)
 
+// ****************************************************************************
+
 export const TableAuthCodes = pgTable('auth_codes', {
   id: serial('id').primaryKey(),
   uuid: varchar('uuid', { length: 256 }).notNull(),
@@ -146,3 +152,53 @@ export type AuthCode = typeof TableAuthCodes.$inferSelect
 export type NewAuthCodeRequest = z.infer<typeof AuthCodeInsertSchema>
 
 export const AuthCodeSelectSchema = createSelectSchema(TableAuthCodes)
+
+// ****************************************************************************
+
+export const TableBasicAuthAccounts = pgTable('basic_auth_accounts', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  login: varchar('login', { length: 256 }).notNull().unique(),
+  passwordHash: varchar('password_hash', { length: 256 }).notNull(),
+
+  tenant: varchar('tenant', { length: 256 }),
+  lastLoginAt: timestamp('last_login_at'),
+  loginAttempts: integer('login_attempts').notNull().default(0),
+  status: varchar('status', {
+    length: 64,
+    enum: ['active', 'locked', 'disabled']
+  }).notNull().default('active'),
+
+  roles: jsonb('roles').$type<Array<string>>().default([]),
+})
+
+export const BasicAuthAccountInsertSchema = createInsertSchema(TableBasicAuthAccounts)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+    lastLoginAt: true,
+    loginAttempts: true,
+    roles: true,
+    passwordHash: true
+  })
+  .extend({
+    roles: z.array(z.string()).nullable().optional(),
+    password: z.string().min(8)
+  })
+
+export type NewBasicAuthAccount = typeof TableBasicAuthAccounts.$inferInsert
+export type BasicAuthAccount = typeof TableBasicAuthAccounts.$inferSelect
+export type NewBasicAuthAccountRequest = z.infer<typeof BasicAuthAccountInsertSchema>
+
+export const BasicAuthAccountSelectSchema = createSelectSchema(TableBasicAuthAccounts)
+  .omit({
+    passwordHash: true
+  })
+  .extend({
+    roles: z.array(z.string()).nullable().optional()
+  })

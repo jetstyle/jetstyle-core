@@ -50,6 +50,13 @@
       "when": 1740394064124,
       "tag": "0006_large_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1747245823388,
+      "tag": "0007_unique_molecule_man",
+      "breakpoints": true
     }
   ]
 }

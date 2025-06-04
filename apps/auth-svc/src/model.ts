@@ -7,7 +7,7 @@ import { eq, asc, and } from 'drizzle-orm'
 import { importPKCS8, importSPKI, SignJWT, exportSPKI } from 'jose'
 import type { KeyLike } from 'jose'
 
-import type { TAccessTokenPayload } from '@jetstyle/server-auth'
+import type { Permission, TAccessTokenPayload } from '@jetstyle/server-auth'
 import { TResult, Err, Ok } from '@jetstyle/utils'
 
 import { getDbConnection } from './db.js'
@@ -23,6 +23,7 @@ import {
   TableRefreshTokens,
   TableTenants,
   TableAuthCodes,
+  TableBasicAuthAccounts,
 } from './schema.js'
 import type { AuthServerConfig } from './types.js'
 
@@ -604,4 +605,80 @@ export async function getChildTenants(parentTenantName: string): Promise<Array<T
     return tenants
   }
   return null
+}
+
+// <<<--- new basic auth account helper funcs, probably should be moved elsewhere --->>>
+
+export async function getBasicAuthAccountByLogin(login: string) {
+  const db = getDbConnection()
+  const accounts = await db.select()
+    .from(TableBasicAuthAccounts)
+    .where(eq(TableBasicAuthAccounts.login, login))
+    .limit(1)
+
+  return accounts[0] ?? null
+}
+
+export async function incrementLoginAttempt(uuid: string, attempts: number) {
+  const db = getDbConnection()
+  await db.update(TableBasicAuthAccounts)
+    .set({ loginAttempts: attempts + 1 })
+    .where(eq(TableBasicAuthAccounts.uuid, uuid))
+}
+
+export async function resetLoginAttempt(uuid: string) {
+  const db = getDbConnection()
+  await db.update(TableBasicAuthAccounts)
+    .set({
+      loginAttempts: 0,
+      lastLoginAt: new Date()
+    })
+    .where(eq(TableBasicAuthAccounts.uuid, uuid))
+}
+
+export async function lockBasicAuthAccount(uuid: string) {
+  const db = getDbConnection()
+  await db.update(TableBasicAuthAccounts)
+    .set({ status: 'locked' })
+    .where(eq(TableBasicAuthAccounts.uuid, uuid))
+}
+
+const MAX_ATTEMPTS = 5
+
+export async function getPermissionsByBasicAuthV2(basicAuthHeader: string): Promise<Permission> {
+  if (!basicAuthHeader) {
+    return { level: 'denied' }
+  }
+
+  const [type, credentials] = basicAuthHeader.split(' ')
+  if (type !== 'Basic' || !credentials) {
+    return { level: 'denied' }
+  }
+  const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
+  const [login, password] = decoded.split(':')
+  if (!login || !password) {
+    return { level: 'denied' }
+  }
+
+  const account = await getBasicAuthAccountByLogin(login)
+  if (!account) {
+    return { level: 'denied' }
+  }
+  if (account.status !== 'active') {
+    return { level: 'denied' }
+  }
+  if (account.loginAttempts >= MAX_ATTEMPTS) {
+    await lockBasicAuthAccount(account.uuid)
+    return { level: 'denied' }
+  }
+
+  const isValidPassword = await bcrypt.compare(password, account.passwordHash)
+  if (!isValidPassword) {
+    await incrementLoginAttempt(account.uuid, account.loginAttempts)
+    return { level: 'denied' }
+  }
+
+  await resetLoginAttempt(account.uuid)
+
+  return { level: 'allowed' }
 }

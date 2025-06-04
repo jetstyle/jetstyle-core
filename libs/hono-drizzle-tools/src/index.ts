@@ -70,7 +70,8 @@ export async function crudList<T>(
   db: DB,
   table: PgTable,
   query: TListQuery,
-  customWhere: any = null
+  customWhere: any = null,
+  omit?: Array<keyof T>
 ): Promise<TListResp<T>> {
   const sortOp = query.sortdir === 'asc' ? asc : desc
   const sortProp = table[query.sortby]
@@ -96,6 +97,16 @@ export async function crudList<T>(
     .offset(query.offset)
     .orderBy(sortOp(sortProp))) as Array<T>
 
+  const sanitizedResult = omit
+    ? result.map((row) => {
+      const { ...clean } = row
+      for (const key of omit) {
+        delete clean[key]
+      }
+      return clean
+		  })
+    : result
+
   let totalReq: any = db.select({ count: count() }).from(table)
   if (customWhere) {
     totalReq = totalReq.where(customWhere)
@@ -105,7 +116,7 @@ export async function crudList<T>(
   const total = totalResult[0]?.count ?? 0
 
   return {
-    result,
+    result: sanitizedResult,
     offset: query.offset,
     limit: query.limit,
     total,
@@ -126,17 +137,32 @@ export async function crudCreate<T, M>(db: DB, table: PgTable, body: M): Promise
   return null
 }
 
-export async function crudRead<T>(db: DB, table: PgTable & { uuid: any }, uuid: string): Promise<T | null> {
-  const result = (await db.select().from(table)
+export async function crudRead<T>(
+  db: DB,
+  table: PgTable & { uuid: any },
+  uuid: string,
+  omit?: Array<keyof T>
+): Promise<T | null> {
+  const result = (await db
+    .select()
+    .from(table)
     .where(eq(table.uuid, uuid))
     .limit(1)
     .offset(0)) as Array<T>
 
-  if (result.length > 0 && result[0]) {
-    return result[0]
+  if (result.length === 0 || !result[0]) {
+    return null
   }
 
-  return null
+  const row = { ...result[0] }
+
+  if (omit) {
+    for (const key of omit) {
+      delete row[key]
+    }
+  }
+
+  return row
 }
 
 export async function crudDelete(db: DB, table: PgTable & { uuid: any }, uuid: string): Promise<string> {

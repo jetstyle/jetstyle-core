@@ -2,14 +2,10 @@ import 'dotenv/config'
 import type { Config } from 'drizzle-kit'
 
 export default {
-  schema: './src/schema.ts',
   out: './drizzle',
-  driver: 'pg',
+  schema: './src/schema.ts',
+  dialect: 'postgresql',
   dbCredentials: {
-    host: process.env.PG__HOST ?? '0.0.0.0',
-    port: process.env.PG__PORT ? Number(process.env.PG__PORT) : 5432,
-    user: process.env.PG__USERNAME,
-    password: process.env.PG__PASSWORD,
-    database: process.env.PG__DATABASE,
+    url: process.env.PG__URL ?? 'postgres:postgres@0.0.0.0:5445/postgres'
   },
 } satisfies Config;
