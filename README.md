@@ -75,8 +75,8 @@ PG__PASSWORD=<your password>
 ```
 
 Migration creation process:
-1. Stop `npm run dev` in the root, as migrations are applied automatically.
+1. Stop `npm run core:dev` in the root, as migrations are applied automatically.
 2. Make changes to schema.ts.
 3. Run `npm run create-migration`.
 4. Verify that the migration was created.
-5. Restart `npm run dev` in the root; the migration will be applied automatically.
+5. Restart `npm run core:dev` in the root; the migration will be applied automatically.
