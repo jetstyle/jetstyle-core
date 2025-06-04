@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 
 import { type TListResponse } from "@jetstyle/utils"
-import { fetchResource } from "@jetstyle/ui/helpers/api"
+import { fetchResource, postResource, patchResource } from "@jetstyle/ui/helpers/api"
 
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,15 +14,9 @@ import { type CTask } from "@/types"
 
 export default function TasksPage() {
   const [data, setData] = useState({
-    todo: [
-      { id: "1", text: "Setup project", description: "Create initial project structure" }
-    ],
-    inProgress: [
-      { id: "2", text: "Design UI", description: "Sketch the main layouts" }
-    ],
-    done: [
-      { id: "3", text: "Review code", description: "Ensure quality and best practices" }
-    ]
+    todo: [] as Array<{ id: string; text: string; description: string }>,
+    inProgress: [] as Array<{ id: string; text: string; description: string }>,
+    done: [] as Array<{ id: string; text: string; description: string }>,
   })
 
   const [newCardText, setNewCardText] = useState({ todo: "", inProgress: "", done: "" })
@@ -40,8 +34,19 @@ export default function TasksPage() {
     if (tasksResult.err !== null) {
       // TODO: show error
     } else {
-      // TODO: put data to setData
-      console.log('tasks', tasksResult.value)
+      const tasks = tasksResult.value.result
+      const columns = {
+        todo: [] as Array<{ id: string; text: string; description: string }>,
+        inProgress: [] as Array<{ id: string; text: string; description: string }>,
+        done: [] as Array<{ id: string; text: string; description: string }>,
+      }
+      tasks.forEach((task) => {
+        const col = (task.status as keyof typeof columns) || 'todo'
+        if (columns[col]) {
+          columns[col].push({ id: task.uuid, text: task.title, description: task.description || '' })
+        }
+      })
+      setData(columns)
     }
   }
 
@@ -78,18 +83,37 @@ export default function TasksPage() {
     setDraggedCard({ ...draggedCard, col })
   }
 
-  const handleDrop = (e: React.DragEvent, targetCol: string) => {
+  const handleDrop = async (e: React.DragEvent, targetCol: string) => {
     e.preventDefault()
+    if (draggedCard && draggedCard.col !== targetCol) {
+      await patchResource<CTask>({
+        apiService: 'taskTracker',
+        apiPath: '/tasks',
+        resourceId: draggedCard.cardId,
+        toSubmit: { status: targetCol },
+      })
+      loadCards()
+    }
     setDraggedCard(null)
   }
 
-  const handleAddCard = (col: string) => {
+  const handleAddCard = async (col: string) => {
     if (!newCardText[col].trim()) return
-    setData(prev => ({
-      ...prev,
-      [col]: [...prev[col], { id: Date.now().toString(), text: newCardText[col], description: "" }]
-    }))
-    setNewCardText(prev => ({ ...prev, [col]: "" }))
+
+    const result = await postResource<CTask>({
+      apiService: 'taskTracker',
+      apiPath: '/tasks',
+      toSubmit: {
+        title: newCardText[col],
+        description: '',
+        status: col,
+      },
+    })
+
+    if (result.err === null) {
+      loadCards()
+    }
+    setNewCardText(prev => ({ ...prev, [col]: '' }))
   }
 
   const handleCardClick = (col: string, id: string) => {
@@ -154,16 +178,22 @@ export default function TasksPage() {
           </div>
           <SheetFooter>
             <Button
-              onClick={() => {
+              onClick={async () => {
                 if (!selectedCard) return
-                const { col, id } = selectedCard
-                setData(prev => {
-                  const updated = { ...prev }
-                  updated[col] = updated[col].map(card =>
-                    card.id === id ? { ...card, text: editTitle, description: editDescription } : card
-                  )
-                  return updated
+                const { id } = selectedCard
+                const result = await patchResource<CTask>({
+                  apiService: 'taskTracker',
+                  apiPath: '/tasks',
+                  resourceId: id,
+                  toSubmit: {
+                    title: editTitle,
+                    description: editDescription,
+                  },
                 })
+
+                if (result.err === null) {
+                  loadCards()
+                }
                 setSelectedCard(null)
               }}
             >
