@@ -236,7 +236,8 @@ export class AuthServer {
     if (!authCode) {
       return Err('auth_code_mismatch')
     }
-    if (authCode.liveTime > Date.now()) {
+    const expirationTime = new Date(authCode.createdAt).getTime() + authCode.liveTime
+    if (Date.now() > expirationTime) {
       return Err('auth_code_expired')
     }
 
