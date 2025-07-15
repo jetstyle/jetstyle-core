@@ -2,6 +2,7 @@
   "name": "@jetstyle/utils",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/src/index.js",
