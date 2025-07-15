@@ -1,8 +1,7 @@
 {
   "extends": "@jetstyle/typescript-config/lib-emit.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "moduleResolution": "node16"
+    "outDir": "dist"
   },
   "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]
