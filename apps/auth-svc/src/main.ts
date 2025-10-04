@@ -14,8 +14,11 @@ import {
   codesRoutes,
   tenantsRoutes,
   usersRoutes,
-  basicAuthAccountsRoutes
+  basicAuthAccountsRoutes,
+  contactsApp,
+  permissionBindsApp
 } from './routes/index.js'
+import defaultSeedFunc from './seed.js'
 
 declare module 'hono' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -42,6 +45,8 @@ async function startServer(authServer: AuthServer) {
     .route('/auth/codes', codesRoutes)
     .route('/auth/users', usersRoutes)
     .route('/auth/tenants', tenantsRoutes)
+    .route('/auth/permission-binds', permissionBindsApp)
+    .route('/auth/contacts', contactsApp)
     .route('/auth/basic-auth-accounts', basicAuthAccountsRoutes)
     .get('/auth/swagger', swaggerUI({ url: '/auth/doc' }))
 
@@ -85,7 +90,8 @@ export async function main(options?: AuthSvcOptions) {
 
   console.log('Started')
 
+  await defaultSeedFunc(authServer)
   if (options?.seedFunc) {
-    options?.seedFunc(authServer)
+    await options.seedFunc(authServer)
   }
 }

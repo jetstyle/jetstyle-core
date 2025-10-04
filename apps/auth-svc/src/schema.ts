@@ -202,3 +202,81 @@ export const BasicAuthAccountSelectSchema = createSelectSchema(TableBasicAuthAcc
   .extend({
     roles: z.array(z.string()).nullable().optional()
   })
+
+// ****************************************************************************
+// PermissionBind entity (ported from aibi)
+
+export const TablePermissionBinds = pgTable('permission_binds', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  userId: varchar('user_id', { length: 256 }).notNull(),
+  tenant: varchar('tenant', { length: 256 }).notNull(),
+  scopes: jsonb('scopes').$type<Array<string>>().default([]),
+  activationStatus: varchar('activation_status', { length: 256, enum: ['active', 'inactive'] })
+    .notNull()
+    .default('active'),
+})
+
+export const PermissionBindInsertSchema = createInsertSchema(TablePermissionBinds)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+    scopes: true,
+  })
+  .extend({
+    scopes: z.array(z.string()).nullable().optional()
+  })
+
+export type NewPermissionBind = typeof TablePermissionBinds.$inferInsert
+export type PermissionBind = typeof TablePermissionBinds.$inferSelect
+export type NewPermissionBindRequest = z.infer<typeof PermissionBindInsertSchema>
+
+export const PermissionBindSelectSchema = createSelectSchema(TablePermissionBinds)
+  .omit({
+    scopes: true
+  })
+  .extend({
+    scopes: z.array(z.string()).nullable().optional()
+  })
+
+export const PermissionBindPatchSchema = PermissionBindInsertSchema.partial()
+
+// ****************************************************************************
+// Contact entity (ported from aibi)
+
+export const TableContacts = pgTable('contacts', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  tenant: varchar('tenant', { length: 256 }).notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  email: varchar('email', { length: 256 }),
+  phone: varchar('phone', { length: 256 }),
+  avatarFileId: varchar('avatar_file_id', { length: 256 }),
+  avatarUrl: text('avatar_url'),
+
+  userId: varchar('user_id', { length: 256 }),
+  inviteCode: varchar('invite_code', { length: 256 }),
+})
+
+export const ContactInsertSchema = createInsertSchema(TableContacts)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+
+export type NewContact = typeof TableContacts.$inferInsert
+export type Contact = typeof TableContacts.$inferSelect
+export type NewContactRequest = z.infer<typeof ContactInsertSchema>
+
+export const ContactSelectSchema = createSelectSchema(TableContacts)

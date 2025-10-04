@@ -14,6 +14,7 @@ export type TAccessTokenPayload = {
   email?: string
   username?: string
   scopes: Array<string>
+  tenants?: Record<string, Array<string>>
 }
 export type TAccessToken = TAccessTokenPayload & {
   exp: number
@@ -125,8 +126,8 @@ export async function getPermissions(
   const fullRequiredRoles = config.fullAccessScopes.concat(requiredRoles).filter(Boolean)
   const hasRequiredRoles = arrayIntersection(fullRequiredRoles, parsedToken.scopes)
 
-  console.log('@ parsedToken', parsedToken)
-  console.log('@ hasRequiredRoles', hasRequiredRoles)
+  // console.log('@ parsedToken', parsedToken)
+  // console.log('@ hasRequiredRoles', hasRequiredRoles)
 
   if (hasRequiredRoles.length > 0) {
     return {
