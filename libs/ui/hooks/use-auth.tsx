@@ -29,6 +29,7 @@ const AuthContext = createContext<TAuthContext>({
 const PAGES = {
   loginPage: '/login',
   signInPage: '/signup',
+  confirmEmailPage: '/confirm-email',
   mainPage: '/',
 }
 
@@ -68,10 +69,11 @@ export function AuthProvider({ children, checkProtectedUrl }: AuthProviderProps)
     const parsedLocation = parseLocation(pathname)
     const isLoginPage = (parsedLocation?.path === PAGES.loginPage)
     const isSignPage = (parsedLocation?.path === PAGES.signInPage)
+    const isConfirmPage = (parsedLocation?.path === PAGES.confirmEmailPage)
 
     if (tokens === null) {
-      // some auth error, redirect to login
-      if (!isLoginPage && !isSignPage) {
+      // some auth error, redirect to login (allow auth-related pages)
+      if (!isLoginPage && !isSignPage && !isConfirmPage) {
         router.push(navRoot(parsedLocation, PAGES.loginPage))
         console.log('redirect to login')
       }
@@ -95,12 +97,12 @@ export function AuthProvider({ children, checkProtectedUrl }: AuthProviderProps)
           console.log('redirect to own tenant')
           router.push(navRoot(newLocation, PAGES.mainPage))
         } else {
-          if (isLoginPage || isSignPage) {
+          if (isLoginPage || isSignPage || isConfirmPage) {
             goToMain()
           }
         }
       } else {
-        if (isLoginPage || isSignPage) {
+        if (isLoginPage || isSignPage || isConfirmPage) {
           goToMain()
         }
       }
