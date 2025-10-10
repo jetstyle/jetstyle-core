@@ -51,6 +51,8 @@ export const UserSelectSchema = createSelectSchema(TableUsers)
     scopes: z.array(z.string()).nullable().optional()
   })
 
+export const UserPatchSchema = UserInsertSchema.partial()
+
 // ****************************************************************************
 
 export const TableRefreshTokens = pgTable('refresh_tokens', {
