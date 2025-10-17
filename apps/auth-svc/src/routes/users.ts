@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { eq } from 'drizzle-orm'
+import { eq, or, exists, and, sql } from 'drizzle-orm'
 
 import {
   ListQueryValidator,
@@ -23,7 +23,9 @@ import {
   TableUsers,
   UserInsertSchema,
   UserSelectSchema,
+  UserPatchSchema,
   TableAuthCodes,
+  TablePermissionBinds,
 } from '../schema.js'
 
 const app = new OpenAPIHono()
@@ -116,6 +118,262 @@ export const usersRoutes = app.openapi(
       }
 
       return c.json(ErrInsertFailed, 500)
+    }
+  ).openapi(
+    createRoute({
+      method: 'get',
+      tags: ['All users on all tenants'],
+      path: '/all-users',
+      request: {
+        query: ListQueryValidator
+      },
+      responses: {
+        200: {
+          description: 'A list of all users on all tenants',
+          content: {
+            'application/json': {
+              schema: ListRespValidator.extend({
+                result: z.array(UserSelectSchema),
+              })
+            }
+          }
+        },
+        403: ErrForbiddenDescription,
+      }
+    }),
+    async (c) => {
+      const db = getDbConnection()
+      const query = c.req.valid('query')
+
+      const authHeader = c.req.header('Authorization')
+      const permission = await getPermissions(['admin'], authHeader)
+
+      if (permission.level === 'denied') {
+        return c.json(ErrForbidden, 403)
+      }
+
+      if (query.tenant === 'allTenants') {
+        query.tenant = undefined
+      }
+
+      const resp = await crudList<User>(db, TableUsers, query)
+      return c.json(resp, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'get',
+      tags: ['Users'],
+      path: '/by-tenant',
+      request: {
+        query: ListQueryValidator
+      },
+      responses: {
+        200: {
+          description: 'Users of tenant and users with permission binds for this tenant',
+          content: {
+            'application/json': {
+              schema: ListRespValidator.extend({
+                result: z.array(UserSelectSchema),
+              }),
+            },
+          },
+        },
+        403: ErrForbiddenDescription,
+      },
+    }),
+    async (c) => {
+      const db = getDbConnection()
+      const query = c.req.valid('query')
+
+      const authHeader = c.req.header('Authorization')
+      const permission = await getPermissions(['users:admin', 'users:read'], authHeader)
+      const tenantsObj = permission.parsedAccessToken?.tenants ?? {}
+      const tenantScopes = query.tenant ? tenantsObj[query.tenant] ?? [] : []
+
+      if (permission.level === 'denied') {
+        return c.json(ErrForbidden, 403)
+      }
+      if (permission.tenant && query.tenant !== permission.tenant && tenantScopes.length === 0) {
+        return c.json(ErrForbidden, 403)
+      }
+
+      let customWhere: ReturnType<typeof or> | undefined = undefined
+
+      if (query.tenant) {
+        customWhere = or(
+          eq(TableUsers.tenant, query.tenant),
+          exists(
+            db
+              .select()
+              .from(TablePermissionBinds)
+              .where(
+                and(
+                  eq(TablePermissionBinds.userId, TableUsers.uuid),
+                  eq(TablePermissionBinds.tenant, query.tenant),
+                  or(
+                    sql`${TablePermissionBinds.scopes} @> '["edit"]'::jsonb`,
+                    sql`${TablePermissionBinds.scopes} @> '["view"]'::jsonb`
+                  )
+                )
+              )
+          )
+        )
+      }
+
+      const resp = await crudList<User>(
+        db,
+        TableUsers,
+        { ...query, tenant: undefined },
+        customWhere
+      )
+      return c.json(resp, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['All users on all tenants'],
+      path: '/all-users',
+      request: {
+        body: {
+          description: 'Create a User for any tenant',
+          content: {
+            'application/json': {
+              schema: UserInsertSchema
+            }
+          }
+        },
+      },
+      responses: {
+        200: {
+          description: 'A new User',
+          content: {
+            'application/json': {
+              schema: UserSelectSchema
+            }
+          }
+        },
+        403: ErrForbiddenDescription,
+        500: {
+          description: 'Failed to create a new User',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const db = getDbConnection()
+      const body = c.req.valid('json')
+
+      const authHeader = c.req.header('Authorization')
+      const permission = await getPermissions(['admin'], authHeader)
+      if (permission.level === 'denied') {
+        return c.json(ErrForbidden, 403)
+      }
+
+      const res = await crudCreate<User, typeof body>(db, TableUsers, body)
+
+      if (res) {
+        return c.json(res, 200)
+      }
+
+      return c.json(ErrInsertFailed, 500)
+    }
+  ).openapi(
+    createRoute({
+      method: 'patch',
+      tags: ['All users on all tenants'],
+      path: '/all-users/{uuid}',
+      request: {
+        body: {
+          description: 'Update a User on any tenant',
+          content: {
+            'application/json': {
+              schema: UserPatchSchema
+            }
+          }
+        },
+        params: z.object({
+          uuid: z.string()
+        })
+      },
+      responses: {
+        200: {
+          description: 'Updated User',
+          content: {
+            'application/json': {
+              schema: UserSelectSchema
+            }
+          }
+        },
+        403: ErrForbiddenDescription,
+        404: {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const db = getDbConnection()
+      const { uuid } = c.req.valid('param')
+      const body = c.req.valid('json')
+
+      const authHeader = c.req.header('Authorization')
+      const permission = await getPermissions(['admin'], authHeader)
+      if (permission.level === 'denied') {
+        return c.json(ErrForbidden, 403)
+      }
+
+      const res = await crudUpdatePatch<User, typeof body>(db, TableUsers, uuid, body)
+      if (res) {
+        return c.json(res, 200)
+      }
+      return c.json(ErrNotFound, 404)
+    }
+  ).openapi(
+    createRoute({
+      method: 'delete',
+      tags: ['All users on all tenants'],
+      path: '/all-users/{uuid}',
+      request: {
+        params: z.object({
+          uuid: z.string()
+        })
+      },
+      responses: {
+        200: {
+          description: 'User deleted',
+          content: {
+            'application/json': {
+              schema: z.object({
+                uuid: z.string()
+              })
+            }
+          }
+        },
+        403: ErrForbiddenDescription,
+      }
+    }),
+    async (c) => {
+      const db = getDbConnection()
+      const { uuid } = c.req.valid('param')
+
+      const authHeader = c.req.header('Authorization')
+      const permission = await getPermissions(['admin'], authHeader)
+      if (permission.level === 'denied') {
+        return c.json(ErrForbidden, 403)
+      }
+
+      await crudDelete(db, TableUsers, uuid)
+      return c.json({ uuid }, 200)
     }
   )
   .openapi(

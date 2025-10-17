@@ -98,6 +98,16 @@ function ResourceInput({ prop, onChange, loadedFile, setLoadedFile, valueToChang
         disabled={valueToChange && prop.nameFromApi === 'path'}
       />
     )
+  } else if (prop.propType === 'text') {
+    input = (
+      <textarea
+        name={prop.propName}
+        value={(valueToChange || loadedFile) && inputValue}
+        className="textarea textarea-bordered w-full max-w-xs"
+        onChange={(e) => onChangeValue(e)}
+        rows={6}
+      />
+    )
   } else if (prop.propType === 'number') {
     input = (
       <input
