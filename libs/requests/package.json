@@ -1,0 +1,23 @@
+{
+  "name": "@jetstyle/requests",
+  "version": "1.0.0",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "build": "tsc -b",
+    "build:watch": "tsc -w"
+  },
+  "devDependencies": {
+    "@jetstyle/config-tailwind": "^1.0.0",
+    "@jetstyle/eslint-config": "^1.0.0",
+    "@jetstyle/typescript-config": "^1.0.0",
+    "eslint": "^8.53.0",
+    "typescript": "^5.3.3"
+  }
+}
