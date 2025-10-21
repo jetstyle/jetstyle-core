@@ -643,12 +643,12 @@ export async function resetLoginAttempt(uuid: string) {
     .where(eq(TableBasicAuthAccounts.uuid, uuid))
 }
 
-export async function lockBasicAuthAccount(uuid: string) {
-  const db = getDbConnection()
-  await db.update(TableBasicAuthAccounts)
-    .set({ status: 'locked' })
-    .where(eq(TableBasicAuthAccounts.uuid, uuid))
-}
+// export async function lockBasicAuthAccount(uuid: string) {
+//   const db = getDbConnection()
+//   await db.update(TableBasicAuthAccounts)
+//     .set({ status: 'disabled' })
+//     .where(eq(TableBasicAuthAccounts.uuid, uuid))
+// }
 
 const MAX_ATTEMPTS = 5
 
@@ -675,7 +675,7 @@ export async function getPermissionsByBasicAuthV2(basicAuthHeader: string): Prom
     return { level: 'denied', tenants: [] }
   }
   if (account.loginAttempts >= MAX_ATTEMPTS) {
-    await lockBasicAuthAccount(account.uuid)
+    // await lockBasicAuthAccount(account.uuid)
     return { level: 'denied', tenants: [] }
   }
 
