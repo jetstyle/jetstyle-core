@@ -20,16 +20,10 @@ import { getDbConnection } from '../db.js'
 import {
   TableBasicAuthAccounts,
   BasicAuthAccountInsertSchema,
+  BasicAuthAccountUpdateSchema,
   BasicAuthAccountSelectSchema,
   BasicAuthAccount,
 } from '../schema.js'
-
-const updateBasicAuthAccountSchema = z.object({
-  login: z.string().optional(),
-  tenant: z.string().optional(),
-  status: z.enum(['active', 'locked', 'disabled']).optional(),
-  roles: z.record(z.any()).optional(),
-})
 
 const app = new OpenAPIHono()
 
@@ -188,7 +182,7 @@ export const basicAuthAccountsRoutes = app.openapi(
         body: {
           content: {
             'application/json': {
-              schema: updateBasicAuthAccountSchema
+              schema: BasicAuthAccountUpdateSchema
             }
           }
         }
@@ -274,5 +268,3 @@ export const basicAuthAccountsRoutes = app.openapi(
       return c.json({ uuid }, 200)
     }
   )
-
-// TODO - add endpoints 4 - update account status && record login attempt && reset login attempts
