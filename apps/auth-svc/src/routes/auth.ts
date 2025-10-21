@@ -91,6 +91,173 @@ export const authRoutes = app.openapi(
     createRoute({
       method: 'post',
       tags: ['Auth'],
+      path: '/register/request-code',
+      description: 'Issues a numeric verification code for a user identified by email. Placeholder sender logs the code. Intended for post-registration verification step.',
+      request: {
+        body: {
+          description: 'Request a verification code',
+          content: {
+            'application/json': {
+              schema: z.object({
+                email: z.string().email()
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Code has been issued',
+          content: {
+            'application/json': {
+              schema: z.object({
+                status: z.string()
+              })
+            }
+          }
+        },
+        404: {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        500: {
+          description: 'Unexpected error',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const authServer = c.get('authServer')
+      const dbConn = (await import('../db.js')).getDbConnection()
+      const { randomUUID } = await import('node:crypto')
+      const { TableAuthCodes } = await import('../schema.js')
+      const { config } = await import('../config.js')
+
+      const body = c.req.valid('json') as { email: string }
+
+      const users = await authServer.findUsersByEmail(body.email)
+      if (!users || !users[0]) {
+        return c.json({ err: 'user_not_found' }, 404)
+      }
+      const user = users[0]
+
+      // generate 6-digit numeric code
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
+
+      // store code
+      try {
+        await dbConn.insert(TableAuthCodes).values({
+          uuid: randomUUID(),
+          userId: user.uuid,
+          code,
+          bondTime: config.codeBondTime,
+          liveTime: config.codeLiveTime
+        })
+      } catch (e: any) {
+        return c.json({ err: 'code_issue_failed', errDescription: e?.toString?.() }, 500)
+      }
+
+      // placeholder sender
+      console.log('[auth] send verification code to email:', body.email, 'code:', code)
+
+      return c.json({ status: 'ok' }, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Auth'],
+      path: '/register/verify',
+      description: 'Verifies a numeric code for a user by email. Supports MASTER code from ENV that always passes.',
+      request: {
+        body: {
+          description: 'Verify code',
+          content: {
+            'application/json': {
+              schema: z.object({
+                email: z.string().email(),
+                code: z.string()
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Tokens',
+          content: {
+            'application/json': {
+              schema: z.object({
+                accessToken: z.string(),
+                refreshToken: z.string()
+              })
+            }
+          }
+        },
+        400: {
+          description: 'Malformed request',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        404: {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const authServer = c.get('authServer')
+      const { email, code } = c.req.valid('json') as { email: string; code: string }
+      const { config } = await import('../config.js')
+
+      const users = await authServer.findUsersByEmail(email)
+      if (!users || !users[0]) {
+        return c.json({ err: 'user_not_found' }, 404)
+      }
+      const user = users[0]
+
+      // MASTER code bypass
+      if (config.masterCode && code === config.masterCode) {
+        const tokens = await authServer.generateTokens(user)
+        if (tokens.err !== null) {
+          return c.json(tokens, 400)
+        }
+        return c.json({
+          accessToken: tokens.value.accessToken,
+          refreshToken: tokens.value.refreshToken,
+        }, 200)
+      }
+
+      // fallback to code login using provided code
+      const result = await authServer.loginByCode({ code })
+      if (result.err !== null) {
+        return c.json(result, 400)
+      }
+      return c.json({
+        accessToken: result.value.accessToken,
+        refreshToken: result.value.refreshToken,
+      }, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Auth'],
       path: '/login',
       description: 'Authenticates the user by password',
       request: {

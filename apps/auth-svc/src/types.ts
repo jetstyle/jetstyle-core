@@ -37,4 +37,5 @@ export type AuthServerConfig = {
   },
   adminTenant?: string
   adminPassword?: string
+  masterCode?: string
 }
