@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "build": "tsc -b",
-    "build:watch": "tsc -w",
+    "build:watch": "tsc -w"
   },
   "devDependencies": {
     "@jetstyle/config-tailwind": "^1.0.0",
