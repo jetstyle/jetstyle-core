@@ -1,11 +1,9 @@
 'use client'
 import React, { useContext, useState, useRef, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
-const _ = require('lodash')
+import _ from 'lodash'
 import Drawer from '../Drawer'
 import CloseIcon from '../icons/Close'
-import JsonEditorForm from '../json-editor/JsonEditorForm'
-import { Tiptap } from '../tiptap/Tiptap'
 import cn from 'classnames'
 import  './style.scss'
 
@@ -251,16 +249,11 @@ const ResourceDrawerForm: React.FC<TypeResourceDrawerFormProps>  = ({
   const [err, setErr] = useState('')
   const [loadedFile, setLoadedFile] = useState(null)
   const [currentToSubmit, setCurrentToSubmit] = useState({})
-  const [text, setText] = useState(JSON.stringify(dataToChange?.resource_value || {}, null, 2))
-  const [html, setHtml] = useState(dataToChange?.resource_value?.html  || '')
   const [isShowUnzipCheckbox, setShowUnzipCheckbox] = useState(false)
   const tenant = useTenant()
   const t = useTranslations('Form')
   const tResource = useTranslations('Resource')
   const form = useRef<any>(null)
-
-  const [globalText, setGlobalText] = useState({})
-  // globalText - собирает в себя поля json из компонента ResourceInputListJson, ключи объекта наименование из resourceDescription.propName
 
   const derived = useMemo(() => {
     return buildDerivedMap(description)
@@ -305,27 +298,6 @@ const ResourceDrawerForm: React.FC<TypeResourceDrawerFormProps>  = ({
     if (whatToAdd === 'file' && !loadedFile) {
       setErr(`${t('fillProp')}: ${tResource('file')}`)
       return
-    }
-
-    if (whatToAdd === 'json') {
-      if (!text){
-        setErr(`${t('fillProp')}: ${tResource('json')}`)
-        return
-      }
-      toSubmit.json =  JSON.parse(text)
-    }
-
-    if (whatToAdd === 'html') {
-      if (!text){
-        setErr(`${t('fillProp')}: ${tResource('html')}`)
-        return
-      }
-      toSubmit.html = html
-    }
-
-    if (globalText) {
-      // все поля из globalText уходят в Submit, как объект с ключами из globalText
-      Object.assign(toSubmit, globalText)
     }
 
     // для сохранения местоположения файла, используем путь из сохраненного файла
@@ -412,37 +384,6 @@ const ResourceDrawerForm: React.FC<TypeResourceDrawerFormProps>  = ({
             />
           ))
         }
-        {/*listOfJson это СПИСОК из нескольких инпутов для ввода 'json' , применяется от типа propType: 'json' и listOfJson={true}
-        его state - globalText*/}
-        {
-          listOfJson &&
-            description?.props?.map((item) => (
-              <ResourceInputListJson
-                key={item.propName}
-                setGlobalText={setGlobalText}
-                globalText={globalText}
-                prop={item}
-                valueToChange={dataToChange}
-              />
-            ))
-        }
-        {/*whatToAdd === 'json' это отдельный ОДНИН инпут для 'json' из fileManager, его state - text*/}
-        {
-          (whatToAdd === 'json') &&
-            <JsonEditorForm
-              text={text}
-              setText={setText}
-            />
-        }
-        {
-          (whatToAdd === 'html') &&
-            <div>
-              <Tiptap
-                htmlContent={html}
-                setHtml={setHtml}
-              />
-            </div>
-        }
         <div className="mt-5">
           <button type="submit" className="btn btn-primary mr-5">{t('Save')}</button>
           <button className="btn" onClick={onFormCancel} >{t('Cancel')}</button>
@@ -454,40 +395,3 @@ const ResourceDrawerForm: React.FC<TypeResourceDrawerFormProps>  = ({
 }
 
 export default ResourceDrawerForm
-
-function ResourceInputListJson({ setGlobalText, prop, globalText, valueToChange }) {
-  const t = useTranslations('Resource')
-
-  let input:any = null
-  const propName = prop.nameFromApi ?? prop.propName
-  const val =  _.get(valueToChange, propName)
-  const [textToTypeJson, setTextToTypeJson] = useState(JSON.stringify(val || {}, null, 2))
-
-  useEffect(() => {
-    setGlobalText({
-      ...globalText,
-      [prop.propName]: JSON.parse(textToTypeJson)
-    })
-  }, [textToTypeJson])
-
-  if (prop.propType === 'json') {
-    input = (
-      <JsonEditorForm
-        text={textToTypeJson}
-        setText={setTextToTypeJson}
-      />
-    )
-  } else {
-    return
-    // return - чтобы другие инпуты из description, не вылезали
-  }
-
-  return (
-    <label className="form-control w-full mb-4">
-      <div className="label">
-        <span className="label-text">{t(prop.propName)}</span>
-      </div>
-      {input}
-    </label>
-  )
-}

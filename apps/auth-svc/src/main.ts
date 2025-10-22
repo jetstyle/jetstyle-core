@@ -35,6 +35,8 @@ async function startServer(authServer: AuthServer) {
     await next()
   })
 
+  console.log('[auth init] config.authSvcSelfUrl', config.authSvcSelfUrl)
+
   app.use(cors({
     origin: config.authSvcSelfUrl,
     credentials: true,
