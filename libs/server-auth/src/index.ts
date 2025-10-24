@@ -38,7 +38,7 @@ export async function verifyAccessToken(
       return Err('no_public_key')
     }
     const { payload } = await jwtVerify(accessToken, key)
-    if (payload.scopes && payload.tenant && payload.name) {
+    if (payload.scopes && payload.name && (payload.tenant || payload.tenants)) {
       return Ok(payload as TAccessToken)
     }
     return Err('jwt_wrong_format', JSON.stringify(payload))
@@ -94,7 +94,11 @@ export async function getPublicKey() {
 
 export type Permission = {
   level: 'denied' | 'allowed' | 'tenant'
-  tenant?: string,
+  /**
+   * @deprecated Use `tenants` instead.
+   */
+  tenant?: string
+  tenants: Array<string>
   parsedAccessToken?: TAccessToken
 }
 
@@ -104,27 +108,38 @@ export async function getPermissions(
 ): Promise<Permission> {
   if (!authHeader) {
     return {
-      level: 'denied'
+      level: 'denied',
+      tenants: []
     }
   }
 
   const token = parseAuthHeader(authHeader)
   if (!token) {
     return {
-      level: 'denied'
+      level: 'denied',
+      tenants: []
     }
   }
 
   const tokenVerifyResult = await verifyAccessToken(token)
   if (tokenVerifyResult.err !== null) {
     return {
-      level: 'denied'
+      level: 'denied',
+      tenants: []
     }
   }
 
   const parsedToken = tokenVerifyResult.value
   const fullRequiredRoles = config.fullAccessScopes.concat(requiredRoles).filter(Boolean)
   const hasRequiredRoles = arrayIntersection(fullRequiredRoles, parsedToken.scopes)
+  const tenantsAllowedFromMap = Object.entries(parsedToken.tenants ?? {})
+    .filter(([, scopes]) => scopes.includes('edit') || scopes.includes('admin'))
+    .map(([tenantName]) => tenantName)
+  // Include legacy single-tenant into the unified tenants array for backward compatibility
+  const tenantsAllowed = Array.from(new Set([
+    ...(parsedToken.tenant ? [parsedToken.tenant] : []),
+    ...tenantsAllowedFromMap,
+  ]))
 
   // console.log('@ parsedToken', parsedToken)
   // console.log('@ hasRequiredRoles', hasRequiredRoles)
@@ -132,6 +147,7 @@ export async function getPermissions(
   if (hasRequiredRoles.length > 0) {
     return {
       level: 'allowed',
+      tenants: tenantsAllowed,
       parsedAccessToken: parsedToken
     }
   }
@@ -140,23 +156,25 @@ export async function getPermissions(
     return {
       level: 'tenant',
       tenant: parsedToken.tenant,
+      tenants: tenantsAllowed,
       parsedAccessToken: parsedToken,
     }
   }
 
   return {
-    level: 'denied'
+    level: 'denied',
+    tenants: []
   }
 }
 
 export function getPermissionsByBasicAuth(basicAuthHeader: string): Permission {
   if (!basicAuthHeader) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const [type, credentials] = basicAuthHeader.split(' ')
   if (type !== 'Basic' || !credentials) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
   const [username, password] = decoded.split(':')
@@ -164,7 +182,7 @@ export function getPermissionsByBasicAuth(basicAuthHeader: string): Permission {
     acc => acc.username === username && acc.password === password
   )
   if (account) {
-    return { level: 'allowed' }
+    return { level: 'allowed', tenants: [] }
   }
-  return { level: 'denied' }
+  return { level: 'denied', tenants: [] }
 }
