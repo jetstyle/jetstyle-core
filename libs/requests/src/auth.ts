@@ -8,6 +8,11 @@ const REFRESH_TOKEN_KEY = 'refreshToken'
 
 let tokenReqCache: Promise<AuthTokens | null> | null = null
 
+export function setRefreshToken(refreshToken: string) {
+  REFRESH_TOKEN = refreshToken
+  localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+}
+
 export function isExpired(jwt: AuthParsedToken) {
   return (Date.now() > jwt.exp * 1000 - 10 * 1000)
 }

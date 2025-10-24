@@ -74,3 +74,5 @@ export type AuthTokenResponse = {
   accessToken: string
   refreshToken: string
 }
+
+export type AuthLoadingState = 'loading' | 'authorized' | 'not-authorized'

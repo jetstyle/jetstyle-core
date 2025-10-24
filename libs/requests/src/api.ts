@@ -52,15 +52,16 @@ export async function postResource<T>({
   try {
     const token = await getAccessToken()
     const url = buildUrl(apiPath)
+    const isFormData = toSubmit instanceof FormData
 
     const res = await fetch(url, {
       method: 'POST',
       ...(apiPath.includes('auth')) && { credentials: 'include' },
       headers: {
-        'Content-Type': 'application/json',
+        ...(!isFormData && { 'Content-Type': 'application/json' }),
         ...token && { 'Authorization': `Bearer ${token}` }
       },
-      body: JSON.stringify(toSubmit),
+      body: isFormData ? toSubmit : JSON.stringify(toSubmit),
     })
 
     const body = await res.json()
