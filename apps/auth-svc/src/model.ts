@@ -647,38 +647,38 @@ const MAX_ATTEMPTS = 5
 
 export async function getPermissionsByBasicAuthV2(basicAuthHeader: string): Promise<Permission> {
   if (!basicAuthHeader) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const [type, credentials] = basicAuthHeader.split(' ')
   if (type !== 'Basic' || !credentials) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
   const [login, password] = decoded.split(':')
   if (!login || !password) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const account = await getBasicAuthAccountByLogin(login)
   if (!account) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   if (account.status !== 'active') {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   if (account.loginAttempts >= MAX_ATTEMPTS) {
     await lockBasicAuthAccount(account.uuid)
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const isValidPassword = await bcrypt.compare(password, account.passwordHash)
   if (!isValidPassword) {
     await incrementLoginAttempt(account.uuid, account.loginAttempts)
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   await resetLoginAttempt(account.uuid)
 
-  return { level: 'allowed' }
+  return { level: 'denied', tenants: [] }
 }
