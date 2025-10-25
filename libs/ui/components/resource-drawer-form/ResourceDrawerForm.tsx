@@ -27,7 +27,6 @@ type TypeResourceDrawerFormProps = {
   onSubmit?: any;
   onCancel?: any;
   fileDragged?:any;
-  listOfJson?: boolean;
   whatToAdd?: string;
   setErrorFromApi?: any;
   errorFromApi?: string | null;
@@ -223,7 +222,6 @@ const ResourceDrawerForm: React.FC<TypeResourceDrawerFormProps>  = ({
   onSubmit = () => {},
   onCancel = () => {},
   fileDragged= null,
-  listOfJson= null,
   whatToAdd,
   setErrorFromApi = () => {},
   errorFromApi= null,

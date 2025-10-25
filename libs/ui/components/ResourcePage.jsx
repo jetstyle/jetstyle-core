@@ -9,7 +9,6 @@ import { useState } from 'react'
 export default function ResourcePage({
   resourceDescription,
   modalWightSize= null,
-  listOfJson= null,
 }) {
   const t = useTranslations('Resource')
 
@@ -66,7 +65,6 @@ export default function ResourcePage({
 
           dataToChange={dataToChange}
           setDataToChange={setDataToChange}
-          listOfJson={listOfJson}
         />
       </Drawer.Side>
     </Drawer>

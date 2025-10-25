@@ -18,7 +18,6 @@ type TResourceEditorProps = {
 
     dataToChange?: any
     setDataToChange?: any
-    listOfJson?: any
 }
 
 export default function ResourceEditor(props: TResourceEditorProps) {
@@ -30,7 +29,6 @@ export default function ResourceEditor(props: TResourceEditorProps) {
     instance = null,
     dataToChange= null,
     setDataToChange= null,
-    listOfJson= null,
     onRefresh = () => {},
   } = props
   const onSubmit = async (toSubmit) => {
@@ -59,7 +57,6 @@ export default function ResourceEditor(props: TResourceEditorProps) {
         onSubmit={onSubmit}
         dataToChange={dataToChange}
         setDataToChange={setDataToChange}
-        listOfJson={listOfJson}
       />
     </div>
   )
