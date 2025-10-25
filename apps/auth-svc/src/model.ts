@@ -267,7 +267,11 @@ export class AuthServer {
     console.log('authServer @ tenant', tenant)
 
     // Create the JWT payload with OpenID standard claims + custom attributes
-    const tenants = await collectAllUserTenantPermissions(user)
+    let tenants = await collectAllUserTenantPermissions(user)
+    // ownership fallback: if user has a tenant and no binds exist for it, grant default 'view'
+    if (user.tenant && tenants[user.tenant] === undefined) {
+      tenants = { ...tenants, [user.tenant]: ['view'] }
+    }
 
     const jwtPayload: TAccessTokenPayload & { tenants: Record<string, Array<string>> } = {
       sub: user.uuid,
