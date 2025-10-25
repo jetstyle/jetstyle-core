@@ -8,6 +8,7 @@ import { importPKCS8, importSPKI, SignJWT, exportSPKI } from 'jose'
 import type { KeyLike } from 'jose'
 
 import type { Permission, TAccessTokenPayload } from '@jetstyle/server-auth'
+import { collectAllUserTenantPermissions } from './model/permissions.js'
 import { TResult, Err, Ok } from '@jetstyle/utils'
 
 import { getDbConnection } from './db.js'
@@ -265,9 +266,10 @@ export class AuthServer {
     const tenant = await this.getTenant(user.tenant)
     console.log('authServer @ tenant', tenant)
 
-    // Create the JWT payload with OpenID standard claims
-    // TODO: move as type definition to a @jetstyle/core
-    const jwtPayload: TAccessTokenPayload = {
+    // Create the JWT payload with OpenID standard claims + custom attributes
+    const tenants = await collectAllUserTenantPermissions(user)
+
+    const jwtPayload: TAccessTokenPayload & { tenants: Record<string, Array<string>> } = {
       sub: user.uuid,
       name: this.getUserFullName(user),
       iss: this.config.issuer,
@@ -279,6 +281,7 @@ export class AuthServer {
       ...user.username && { username: user.username },
 
       scopes: (user.scopes && user.scopes.length > 0) ? user.scopes : [],
+      tenants, // new field: { [tenantName]: Array<string> }
     }
 
     const accessToken = await new SignJWT(jwtPayload)
