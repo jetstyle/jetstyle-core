@@ -1,0 +1,27 @@
+{
+  "name": "@jetstyle/server-start-proxy",
+  "version": "1.0.0",
+  "description": "Reusable HTTP+WS start proxy to route local monorepo apps by path to ports",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "test": "echo 'no tests'"
+  },
+  "dependencies": {
+    "undici": "^6.19.8",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@jetstyle/eslint-config": "^1.0.0",
+    "@jetstyle/typescript-config": "^1.0.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3"
+  }
+}
