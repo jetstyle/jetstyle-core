@@ -30,11 +30,12 @@ export const config: AuthServerConfig = {
     password: process.env.PG__PASSWORD ?? '',
     database: process.env.PG__DATABASE ?? '',
     logging: (process.env.PG__LOGGING === 'true' || process.env.PG__LOGGING === 'enabled'),
-    migrationsFolder: process.env.AUTH_SVC__MIGRATIONS ?? '',
+    migrationsFolder: process.env.AUTH_SVC__MIGRATIONS ?? './migrations',
   },
   allowedRegistrationDomains: [],
   adminTenant: process.env.AUTH__ADMIN_TENANT,
-  adminPassword: process.env.AUTH__ADMIN_PASSWORD
+  adminPassword: process.env.AUTH__ADMIN_PASSWORD,
+  masterCode: process.env.AUTH_SVC__MASTER_CODE
 }
 
 if (process.env.AUTH__ALLOWED_REGISTRATION_DOMAINS) {
