@@ -8,6 +8,7 @@ import { importPKCS8, importSPKI, SignJWT, exportSPKI } from 'jose'
 import type { KeyLike } from 'jose'
 
 import type { Permission, TAccessTokenPayload } from '@jetstyle/server-auth'
+import { collectAllUserTenantPermissions } from './model/permissions.js'
 import { TResult, Err, Ok } from '@jetstyle/utils'
 
 import { getDbConnection } from './db.js'
@@ -265,9 +266,14 @@ export class AuthServer {
     const tenant = await this.getTenant(user.tenant)
     console.log('authServer @ tenant', tenant)
 
-    // Create the JWT payload with OpenID standard claims
-    // TODO: move as type definition to a @jetstyle/core
-    const jwtPayload: TAccessTokenPayload = {
+    // Create the JWT payload with OpenID standard claims + custom attributes
+    let tenants = await collectAllUserTenantPermissions(user)
+    // ownership fallback: if user has a tenant and no binds exist for it, grant default 'view'
+    if (user.tenant && tenants[user.tenant] === undefined) {
+      tenants = { ...tenants, [user.tenant]: ['view'] }
+    }
+
+    const jwtPayload: TAccessTokenPayload & { tenants: Record<string, Array<string>> } = {
       sub: user.uuid,
       name: this.getUserFullName(user),
       iss: this.config.issuer,
@@ -279,6 +285,7 @@ export class AuthServer {
       ...user.username && { username: user.username },
 
       scopes: (user.scopes && user.scopes.length > 0) ? user.scopes : [],
+      tenants, // new field: { [tenantName]: Array<string> }
     }
 
     const accessToken = await new SignJWT(jwtPayload)
@@ -647,38 +654,38 @@ const MAX_ATTEMPTS = 5
 
 export async function getPermissionsByBasicAuthV2(basicAuthHeader: string): Promise<Permission> {
   if (!basicAuthHeader) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const [type, credentials] = basicAuthHeader.split(' ')
   if (type !== 'Basic' || !credentials) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
   const [login, password] = decoded.split(':')
   if (!login || !password) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const account = await getBasicAuthAccountByLogin(login)
   if (!account) {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   if (account.status !== 'active') {
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
   if (account.loginAttempts >= MAX_ATTEMPTS) {
     await lockBasicAuthAccount(account.uuid)
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const isValidPassword = await bcrypt.compare(password, account.passwordHash)
   if (!isValidPassword) {
     await incrementLoginAttempt(account.uuid, account.loginAttempts)
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   await resetLoginAttempt(account.uuid)
 
-  return { level: 'allowed' }
+  return { level: 'denied', tenants: [] }
 }
