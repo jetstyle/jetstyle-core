@@ -1,3 +1,5 @@
+
+import type { JSX } from 'react'
 import { type ResourceProp } from './types'
 
 type TypeCustomButton = {

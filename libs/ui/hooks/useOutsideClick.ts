@@ -1,10 +1,10 @@
 import { useEffect, RefObject } from 'react'
 
 function useOutsideClick(
-  ref: RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement | null>,
   onOutsideClick: any,
   shouldIgnore: (target: any) => boolean = () => false,
-  ignoreElements?: RefObject<HTMLElement>[] | null,
+  ignoreElements?: RefObject<HTMLElement | null>[] | null,
 ) {
   useEffect(() => {
     const handleClick = (event: any) => {
@@ -13,7 +13,7 @@ function useOutsideClick(
       if (ref.current && !ref.current.contains(target)) {
         if (!shouldIgnore(target)) {
           if (ignoreElements) {
-            ignoreElements.map((element: RefObject<HTMLElement>) => {
+            ignoreElements.map((element: RefObject<HTMLElement | null>) => {
               if (element.current && !element.current.contains(target)) {
                 onOutsideClick()
               }
