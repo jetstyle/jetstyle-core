@@ -6,7 +6,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./schema": "./dist/schema.js",
-    "./middleware": "./dist/middleware.js"
+    "./types": "./dist/types.js",
+    "./model": "./dist/model.js"
   },
   "scripts": {
     "build": "tsc",

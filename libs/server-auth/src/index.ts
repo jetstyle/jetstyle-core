@@ -4,6 +4,8 @@ import { TResult, Ok, Err, arrayIntersection } from '@jetstyle/utils'
 import bcrypt from 'bcrypt'
 
 import config from './config.js'
+import type { DB } from './types.js'
+import { findBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt } from './model.js'
 
 export type TAccessTokenPayload = {
   sub: string
@@ -103,27 +105,11 @@ export type Permission = {
   parsedAccessToken?: TAccessToken
 }
 
-// DB-backed Basic HTTP Auth wiring (host service provides DB accessors; comparePassword is internal here)
-export type BasicAuthAccountLite = {
-  uuid: string
-  login: string
-  passwordHash: string | null
-  status: 'active' | 'inactive'
-  loginAttempts: number
-}
-type BasicAuthDb = {
-  findByLogin(login: string): Promise<BasicAuthAccountLite | null>
-  incrementLoginAttempt(uuid: string, attempts: number): Promise<void>
-  resetLoginAttempt(uuid: string): Promise<void>
-}
-let basicAuthDb: BasicAuthDb | null = null
-export function setBasicAuthDb(db: BasicAuthDb) {
-  basicAuthDb = db
-}
 
-export async function getPermissions(
+export async function getPermissions<T extends DB>(
   requiredRoles: Array<string>,
-  authHeader: string | undefined
+  authHeader: string | undefined,
+  db?: T
 ): Promise<Permission> {
   if (!authHeader) {
     return {
@@ -134,22 +120,22 @@ export async function getPermissions(
 
   // Basic HTTP Auth path: if DB accessors wired, validate against DB and use bcrypt compare internally
   const [authType, authCreds] = authHeader.split(' ')
-  if (authType === 'Basic' && authCreds && basicAuthDb) {
+  if (authType === 'Basic' && authCreds && db) {
     try {
       const decoded = Buffer.from(authCreds, 'base64').toString('utf-8')
       const [login, password] = decoded.split(':')
       if (login && password) {
-        const account = await basicAuthDb.findByLogin(login)
+        const account = await findBasicAuthAccountByLogin(db, login)
         const MAX_ATTEMPTS = 5
         if (!account || account.status !== 'active' || account.loginAttempts >= MAX_ATTEMPTS) {
           return { level: 'denied' }
         }
         const ok = await bcrypt.compare(password, account.passwordHash || '')
         if (!ok) {
-          await basicAuthDb.incrementLoginAttempt(account.uuid, account.loginAttempts)
+          await incrementLoginAttempt(db, account.uuid, account.loginAttempts)
           return { level: 'denied' }
         }
-        await basicAuthDb.resetLoginAttempt(account.uuid)
+        await resetLoginAttempt(db, account.uuid)
         // Treat valid Basic as full access (admin-equivalent)
         return { level: 'allowed' }
       }

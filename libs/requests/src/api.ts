@@ -75,7 +75,7 @@ export async function postResource<T>({
     })
 
     const body = await res.json()
-    if (res.status === 200) {
+    if (res.status === 200 || res.status === 201) {
       const result = body as T
       if (resourceName) {
         dataLayer.writeEntity(resourceName, result)

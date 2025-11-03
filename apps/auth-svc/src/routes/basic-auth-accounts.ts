@@ -55,7 +55,7 @@ export const basicAuthAccountsRoutes = app.openapi(
     const query = c.req.valid('query')
 
     const authHeader = c.req.header('Authorization')
-    const permission = await getPermissions([], authHeader)
+    const permission = await getPermissions([], authHeader, db)
 
     if (permission.level === 'denied') {
       return c.json(ErrForbidden, 403)
@@ -95,7 +95,7 @@ export const basicAuthAccountsRoutes = app.openapi(
       const { uuid } = c.req.valid('param')
 
       const authHeader = c.req.header('Authorization')
-      const permission = await getPermissions([], authHeader)
+      const permission = await getPermissions([], authHeader, db)
 
       if (permission.level === 'denied') {
         return c.json(ErrForbidden, 403)
@@ -139,7 +139,7 @@ export const basicAuthAccountsRoutes = app.openapi(
       const body = c.req.valid('json')
 
       const authHeader = c.req.header('Authorization')
-      const permission = await getPermissions([], authHeader)
+      const permission = await getPermissions([], authHeader, db)
 
       if (permission.level === 'denied') {
         return c.json(ErrForbidden, 403)
@@ -206,7 +206,7 @@ export const basicAuthAccountsRoutes = app.openapi(
       const body = c.req.valid('json')
 
       const authHeader = c.req.header('Authorization')
-      const permission = await getPermissions([], authHeader)
+      const permission = await getPermissions([], authHeader, db)
 
       if (permission.level === 'denied') {
         return c.json(ErrForbidden, 403)
@@ -259,7 +259,7 @@ export const basicAuthAccountsRoutes = app.openapi(
       const { uuid } = c.req.valid('param')
 
       const authHeader = c.req.header('Authorization')
-      const permission = await getPermissions([], authHeader)
+      const permission = await getPermissions([], authHeader, db)
 
       if (permission.level === 'denied') {
         return c.json(ErrForbidden, 403)
@@ -367,7 +367,7 @@ export const basicAuthAccountsRoutes = app.openapi(
       const body = c.req.valid('json') as { login: string }
 
       const authHeader = c.req.header('Authorization')
-      const permission = await getPermissions([], authHeader)
+      const permission = await getPermissions([], authHeader, db)
       if (permission.level === 'denied') {
         return c.json(ErrForbidden, 403)
       }
