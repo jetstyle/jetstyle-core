@@ -1,7 +1,7 @@
 import type { FetchResourceOptions, PostResourceOptions, PatchResourceOptions, DeleteResourceOptions, TResult } from './types'
 import { getTenant } from './utils'
 import { Ok, Err } from './utils'
-import { getAccessToken } from './auth'
+import { getAccessToken as defaultGetAccessToken } from './auth'
 import { dataLayer } from './index'
 
 function buildUrl(apiPath: string, query: Record<string, any> = {}): string {
@@ -16,16 +16,22 @@ function buildUrl(apiPath: string, query: Record<string, any> = {}): string {
 export async function fetchResource<T>({
   apiPath,
   query = {},
+  getAccessToken,
 }: FetchResourceOptions): Promise<TResult<T>> {
   try {
-    const token = await getAccessToken()
     const url = buildUrl(apiPath, query)
+
+    // Prefer custom getter (returns full header like "Basic ..." or "Bearer ..."),
+    // fallback to default (raw access token, we prefix with "Bearer ").
+    const customHeader = getAccessToken ? await getAccessToken() : null
+    const defaultToken = customHeader ? null : await defaultGetAccessToken()
 
     const res = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        ...token && { 'Authorization': `Bearer ${token}` }
+        ...(customHeader ? { 'Authorization': customHeader } : {}),
+        ...(defaultToken ? { 'Authorization': `Bearer ${defaultToken}` } : {})
       }
     })
 
@@ -47,19 +53,23 @@ export async function fetchResource<T>({
 export async function postResource<T>({
   apiPath,
   toSubmit = {},
-  resourceName
+  resourceName,
+  getAccessToken,
 }: PostResourceOptions): Promise<TResult<T>> {
   try {
-    const token = await getAccessToken()
     const url = buildUrl(apiPath)
     const isFormData = toSubmit instanceof FormData
+
+    const customHeader = getAccessToken ? await getAccessToken() : null
+    const defaultToken = customHeader ? null : await defaultGetAccessToken()
 
     const res = await fetch(url, {
       method: 'POST',
       ...(apiPath.includes('auth')) && { credentials: 'include' },
       headers: {
         ...(!isFormData && { 'Content-Type': 'application/json' }),
-        ...token && { 'Authorization': `Bearer ${token}` }
+        ...(customHeader ? { 'Authorization': customHeader } : {}),
+        ...(defaultToken ? { 'Authorization': `Bearer ${defaultToken}` } : {})
       },
       body: isFormData ? toSubmit : JSON.stringify(toSubmit),
     })
@@ -90,7 +100,8 @@ export async function patchResource<T>(options: PatchResourceOptions): Promise<T
       apiPath,
       resourceId,
       toSubmit,
-      resourceName
+      resourceName,
+      getAccessToken,
     } = options
 
     const path = resourceId
@@ -98,12 +109,15 @@ export async function patchResource<T>(options: PatchResourceOptions): Promise<T
       : apiPath
     const url = buildUrl(path)
 
-    const token = await getAccessToken()
+    const customHeader = getAccessToken ? await getAccessToken() : null
+    const defaultToken = customHeader ? null : await defaultGetAccessToken()
+
     const res = await fetch(url, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...token && { 'Authorization': `Bearer ${token}` }
+        ...(customHeader ? { 'Authorization': customHeader } : {}),
+        ...(defaultToken ? { 'Authorization': `Bearer ${defaultToken}` } : {})
       },
       body: JSON.stringify(toSubmit),
     })
@@ -131,7 +145,8 @@ export async function deleteResource<T>({
   apiPath,
   resourceId,
   query = {},
-  resourceName
+  resourceName,
+  getAccessToken,
 }: DeleteResourceOptions): Promise<TResult<T>> {
   try {
     const path = resourceId
@@ -139,13 +154,15 @@ export async function deleteResource<T>({
       : apiPath
     const url = buildUrl(path, query)
 
-    const token = await getAccessToken()
+    const customHeader = getAccessToken ? await getAccessToken() : null
+    const defaultToken = customHeader ? null : await defaultGetAccessToken()
 
     const res = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        ...token && { 'Authorization': `Bearer ${token}` }
+        ...(customHeader ? { 'Authorization': customHeader } : {}),
+        ...(defaultToken ? { 'Authorization': `Bearer ${defaultToken}` } : {})
       },
     })
     const body = await res.json()

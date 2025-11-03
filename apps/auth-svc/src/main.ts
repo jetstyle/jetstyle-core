@@ -5,10 +5,11 @@ import { cors } from 'hono/cors'
 import { createMiddleware } from 'hono/factory'
 
 import { sleep } from '@jetstyle/utils'
+import { setBasicAuthDb } from '@jetstyle/server-auth'
 
 import { config } from './config.js'
 import { applyMigrations, createDbConnection } from './db.js'
-import { AuthServer } from './model.js'
+import { AuthServer, getBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt } from './model.js'
 import {
   authRoutes,
   codesRoutes,
@@ -88,6 +89,31 @@ export async function main(options?: AuthSvcOptions) {
   })
 
   const authServer = new AuthServer(db, config)
+
+  // Register DB-backed Basic HTTP Auth accessors for @jetstyle/server-auth
+  setBasicAuthDb({
+    async findByLogin(login: string) {
+      const acc = await getBasicAuthAccountByLogin(login)
+      if (!acc) {
+        return null
+      }
+      // Server-auth needs a lite view
+      return {
+        uuid: acc.uuid,
+        login: acc.login,
+        passwordHash: acc.passwordHash ?? null,
+        status: acc.status as 'active' | 'inactive',
+        loginAttempts: acc.loginAttempts ?? 0,
+      }
+    },
+    async incrementLoginAttempt(uuid: string, attempts: number) {
+      await incrementLoginAttempt(uuid, attempts)
+    },
+    async resetLoginAttempt(uuid: string) {
+      await resetLoginAttempt(uuid)
+    }
+  })
+
   startServer(authServer)
 
   console.log('Started')

@@ -18,6 +18,7 @@
   "dependencies": {
     "@hono/zod-openapi": "^0.19.2",
     "@jetstyle/utils": "^1.0.0",
+    "bcrypt": "^5.1.1",
     "jose": "^5.9.2",
     "drizzle-orm": "0.41.0",
     "drizzle-zod": "0.7.1"

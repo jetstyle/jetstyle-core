@@ -24,6 +24,7 @@ import {
   BasicAuthAccountSelectSchema,
   BasicAuthAccount,
 } from '../schema.js'
+import { getBasicAuthAccountByLogin, resetLoginAttempt } from '../model.js'
 
 const app = new OpenAPIHono()
 
@@ -266,5 +267,130 @@ export const basicAuthAccountsRoutes = app.openapi(
 
       await crudDelete(db, TableBasicAuthAccounts, uuid)
       return c.json({ uuid }, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Basic auth accounts'],
+      path: '/login',
+      request: {
+        body: {
+          content: {
+            'application/json': {
+              schema: z.object({
+                login: z.string(),
+                password: z.string(),
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Authenticated basic auth account',
+          content: {
+            'application/json': {
+              schema: BasicAuthAccountSelectSchema
+            }
+          }
+        },
+        401: { description: 'Invalid password' },
+        403: { description: 'Account not active' },
+        404: { description: 'Account not found' }
+      }
+    }),
+    async (c) => {
+      const authServer = c.get('authServer')
+      const { login, password } = c.req.valid('json') as { login: string; password: string }
+
+      const account = await getBasicAuthAccountByLogin(login)
+      if (!account) {
+        return c.json({ err: 'not_found' }, 404)
+      }
+
+      const cmp = await authServer.comparePassword(password, account.passwordHash || '')
+      if (cmp.err !== null) {
+        return c.json(cmp, 500)
+      }
+      if (!cmp.value) {
+        return c.json({ err: 'invalid_password', errDescription: 'Invalid password' }, 401)
+      }
+
+      if (account.status !== 'active') {
+        return c.json({ err: 'account_inactive', errDescription: 'Account is not active' }, 403)
+      }
+
+      await resetLoginAttempt(account.uuid)
+
+      const safe: Partial<BasicAuthAccount> = { ...account }
+      delete (safe as any).passwordHash
+      return c.json(safe, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Basic auth accounts'],
+      path: '/{uuid}/set-login',
+      request: {
+        params: z.object({ uuid: z.string().uuid() }),
+        body: {
+          content: {
+            'application/json': {
+              schema: z.object({
+                login: z.string()
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Success',
+          content: {
+            'application/json': {
+              schema: z.object({
+                success: z.boolean()
+              })
+            }
+          }
+        },
+        403: ErrForbiddenDescription,
+        404: { description: 'Not found' },
+        409: { description: 'Login already taken' }
+      }
+    }),
+    async (c) => {
+      const db = getDbConnection()
+      const { uuid } = c.req.valid('param')
+      const body = c.req.valid('json') as { login: string }
+
+      const authHeader = c.req.header('Authorization')
+      const permission = await getPermissions([], authHeader)
+      if (permission.level === 'denied') {
+        return c.json(ErrForbidden, 403)
+      }
+
+      const existing = await db.query.TableBasicAuthAccounts.findFirst({
+        where: eq(TableBasicAuthAccounts.uuid, uuid)
+      })
+      if (!existing) {
+        return c.json({ error: 'Not found' }, 404)
+      }
+
+      // Ensure login is unique
+      const taken = await db.query.TableBasicAuthAccounts.findFirst({
+        where: eq(TableBasicAuthAccounts.login, body.login)
+      })
+      if (taken && taken.uuid !== uuid) {
+        return c.json({ error: 'Login already taken' }, 409)
+      }
+
+      await db.update(TableBasicAuthAccounts)
+        .set({ login: body.login })
+        .where(eq(TableBasicAuthAccounts.uuid, uuid))
+
+      return c.json({ success: true }, 200)
     }
   )
