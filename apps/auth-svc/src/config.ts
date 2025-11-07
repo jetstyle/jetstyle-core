@@ -7,7 +7,7 @@ dotenv.config()
 export const config: AuthServerConfig = {
   port: 8091,
   authMethods: ['username-password', 'email-password'],
-  authSvcSelfUrl: process.env.AUTH_SVC__SELF_URL ?? 'http://localhost:3000',
+  authSvcSelfUrl: process.env.AUTH_SVC__SELF_URL ?? 'http://localhost:8080',
   privateKey: process.env.AUTH_SVC__PRIVATE_KEY ?? '',
   publicKey: process.env.AUTH_SVC__PUBLIC_KEY ?? '',
   jwtLiveTime: process.env.AUTH_SVC__JWT_TTL ?? '525949min',  // year in minutes oO
@@ -30,11 +30,11 @@ export const config: AuthServerConfig = {
     password: process.env.PG__PASSWORD ?? '',
     database: process.env.PG__DATABASE ?? '',
     logging: (process.env.PG__LOGGING === 'true' || process.env.PG__LOGGING === 'enabled'),
-    migrationsFolder: process.env.AUTH_SVC__MIGRATIONS ?? '',
+    migrationsFolder: process.env.AUTH_SVC__MIGRATIONS ?? 'core/apps/auth-svc/drizzle',
   },
   allowedRegistrationDomains: [],
-  adminTenant: process.env.AUTH__ADMIN_TENANT,
-  adminPassword: process.env.AUTH__ADMIN_PASSWORD
+  adminTenant: process.env.AUTH__ADMIN_TENANT ?? 'platform',
+  adminPassword: process.env.AUTH__ADMIN_PASSWORD ?? 'change-me'
 }
 
 if (process.env.AUTH__ALLOWED_REGISTRATION_DOMAINS) {

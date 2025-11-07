@@ -15,9 +15,11 @@ export type ServerAuthConfig = {
   fullAccessBasicAccounts: Array<BasicHttpAuthAccount>
 }
 
+const authSvcSelfUrl = process.env.AUTH_SVC__SELF_URL ?? 'http://localhost:8080'
+
 const config: ServerAuthConfig = {
   publicKeyCacheSeconds: 60 * 60,
-  publicKeyUrl: process.env.AUTH__PUBLIC_KEY_URL,
+  publicKeyUrl: process.env.AUTH__PUBLIC_KEY_URL ?? `${authSvcSelfUrl}/auth/core/public-key`,
   tenantBasedPermissions: Boolean(process.env.AUTH__TENANT_PERMISSIONS === 'enabled'),
   fullAccessScopes: ['admin'],
   fullAccessBasicAccounts: []
