@@ -105,7 +105,6 @@ export type Permission = {
   parsedAccessToken?: TAccessToken
 }
 
-
 export async function getPermissions<T extends DB>(
   requiredRoles: Array<string>,
   authHeader: string | undefined,

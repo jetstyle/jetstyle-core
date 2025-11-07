@@ -22,7 +22,9 @@ export async function findBasicAuthAccountByLogin<T extends DB>(
     .limit(1)
 
   const acc = rows[0]
-  if (!acc) return null
+  if (!acc) {
+    return null
+  }
 
   return {
     uuid: acc.uuid,

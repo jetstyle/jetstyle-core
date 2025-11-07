@@ -18,5 +18,4 @@ const config: ServerAuthConfig = {
   fullAccessScopes: ['admin'],
 }
 
-
 export default config
