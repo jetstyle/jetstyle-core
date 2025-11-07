@@ -2,8 +2,13 @@
   "name": "@jetstyle/server-auth",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
-  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./schema": "./dist/schema.js",
+    "./types": "./dist/types.js",
+    "./model": "./dist/model.js"
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
@@ -12,8 +17,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@hono/zod-openapi": "^0.19.2",
     "@jetstyle/utils": "^1.0.0",
-    "jose": "^5.9.2"
+    "bcrypt": "^5.1.1",
+    "jose": "^5.9.2",
+    "drizzle-orm": "0.41.0",
+    "drizzle-zod": "0.7.1"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

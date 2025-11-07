@@ -41,7 +41,7 @@
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.41.0",
-    "drizzle-zod": "0.5.1",
+    "drizzle-zod": "0.7.1",
     "jose": "^5.9.2",
     "postgres": "^3.4.4"
   }

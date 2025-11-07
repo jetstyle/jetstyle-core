@@ -34,7 +34,8 @@ export const config: AuthServerConfig = {
   },
   allowedRegistrationDomains: [],
   adminTenant: process.env.AUTH__ADMIN_TENANT ?? 'platform',
-  adminPassword: process.env.AUTH__ADMIN_PASSWORD ?? 'change-me'
+  adminPassword: process.env.AUTH__ADMIN_PASSWORD ?? 'change-me',
+  masterCode: process.env.AUTH_SVC__MASTER_CODE
 }
 
 if (process.env.AUTH__ALLOWED_REGISTRATION_DOMAINS) {

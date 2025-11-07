@@ -21,12 +21,18 @@ export type FetchResourceOptions = {
   apiPath: string
   query?: Record<string, string>
   headers?: Record<string, string>
+  // Optional custom token getter that returns a full Authorization header value,
+  // e.g. "Bearer x.y.z" or "Basic base64"
+  getAccessToken?: () => Promise<string | null>
 }
 
 export type PostResourceOptions = {
   apiPath: string
   toSubmit: any
   resourceName?: string
+  // Optional custom token getter that returns a full Authorization header value,
+  // e.g. "Bearer x.y.z" or "Basic base64"
+  getAccessToken?: () => Promise<string | null>
 }
 
 export type PatchResourceOptions = {
@@ -34,6 +40,9 @@ export type PatchResourceOptions = {
   resourceId?: string
   toSubmit: any
   resourceName?: string
+  // Optional custom token getter that returns a full Authorization header value,
+  // e.g. "Bearer x.y.z" or "Basic base64"
+  getAccessToken?: () => Promise<string | null>
 }
 
 export type DeleteResourceOptions = {
@@ -41,6 +50,9 @@ export type DeleteResourceOptions = {
   resourceId?: string
   query?: Record<string, string>
   resourceName?: string
+  // Optional custom token getter that returns a full Authorization header value,
+  // e.g. "Bearer x.y.z" or "Basic base64"
+  getAccessToken?: () => Promise<string | null>
 }
 
 export type AuthParsedToken = {
@@ -74,3 +86,5 @@ export type AuthTokenResponse = {
   accessToken: string
   refreshToken: string
 }
+
+export type AuthLoadingState = 'loading' | 'authorized' | 'not-authorized'

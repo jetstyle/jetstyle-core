@@ -1,8 +1,11 @@
 import { type KeyLike, jwtVerify, importSPKI } from 'jose'
 
 import { TResult, Ok, Err, arrayIntersection } from '@jetstyle/utils'
+import bcrypt from 'bcrypt'
 
 import config from './config.js'
+import type { DB } from './types.js'
+import { findBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt } from './model.js'
 
 export type TAccessTokenPayload = {
   sub: string
@@ -102,15 +105,44 @@ export type Permission = {
   parsedAccessToken?: TAccessToken
 }
 
-export async function getPermissions(
+export async function getPermissions<T extends DB>(
   requiredRoles: Array<string>,
-  authHeader: string | undefined
+  authHeader: string | undefined,
+  db?: T
 ): Promise<Permission> {
   if (!authHeader) {
     return {
       level: 'denied',
       tenants: []
     }
+  }
+
+  // Basic HTTP Auth path: if DB accessors wired, validate against DB and use bcrypt compare internally
+  const [authType, authCreds] = authHeader.split(' ')
+  if (authType === 'Basic' && authCreds && db) {
+    try {
+      const decoded = Buffer.from(authCreds, 'base64').toString('utf-8')
+      const [login, password] = decoded.split(':')
+      if (login && password) {
+        const account = await findBasicAuthAccountByLogin(db, login)
+        const MAX_ATTEMPTS = 5
+        if (!account || account.status !== 'active' || account.loginAttempts >= MAX_ATTEMPTS) {
+          return { level: 'denied', tenants: [] }
+        }
+        const ok = await bcrypt.compare(password, account.passwordHash || '')
+        if (!ok) {
+          await incrementLoginAttempt(db, account.uuid, account.loginAttempts)
+          return { level: 'denied', tenants: [] }
+        }
+        await resetLoginAttempt(db, account.uuid)
+        // Treat valid Basic as full access (admin-equivalent)
+        return { level: 'allowed', tenants: [] }
+      }
+    } catch (_e) {
+      // fall through to JWT path
+    }
+    // If Basic was provided but not valid, deny
+    return { level: 'denied', tenants: [] }
   }
 
   const token = parseAuthHeader(authHeader)
@@ -165,24 +197,4 @@ export async function getPermissions(
     level: 'denied',
     tenants: []
   }
-}
-
-export function getPermissionsByBasicAuth(basicAuthHeader: string): Permission {
-  if (!basicAuthHeader) {
-    return { level: 'denied', tenants: [] }
-  }
-
-  const [type, credentials] = basicAuthHeader.split(' ')
-  if (type !== 'Basic' || !credentials) {
-    return { level: 'denied', tenants: [] }
-  }
-  const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
-  const [username, password] = decoded.split(':')
-  const account = config.fullAccessBasicAccounts.find(
-    acc => acc.username === username && acc.password === password
-  )
-  if (account) {
-    return { level: 'allowed', tenants: [] }
-  }
-  return { level: 'denied', tenants: [] }
 }

@@ -1,4 +1,3 @@
-
 import { randomUUID, getRandomValues } from 'node:crypto'
 
 import { z } from '@hono/zod-openapi'
@@ -8,11 +7,11 @@ import { importPKCS8, importSPKI, SignJWT, exportSPKI } from 'jose'
 import type { KeyLike } from 'jose'
 
 import type { Permission, TAccessTokenPayload } from '@jetstyle/server-auth'
-import { collectAllUserTenantPermissions } from './model/permissions.js'
 import { TResult, Err, Ok } from '@jetstyle/utils'
 
 import { getDbConnection } from './db.js'
 import type { DB } from './db.js'
+import { collectAllUserTenantPermissions } from './model/permissions.js'
 import type {
   Tenant,
   User,
@@ -643,12 +642,12 @@ export async function resetLoginAttempt(uuid: string) {
     .where(eq(TableBasicAuthAccounts.uuid, uuid))
 }
 
-export async function lockBasicAuthAccount(uuid: string) {
-  const db = getDbConnection()
-  await db.update(TableBasicAuthAccounts)
-    .set({ status: 'locked' })
-    .where(eq(TableBasicAuthAccounts.uuid, uuid))
-}
+// export async function lockBasicAuthAccount(uuid: string) {
+//   const db = getDbConnection()
+//   await db.update(TableBasicAuthAccounts)
+//     .set({ status: 'disabled' })
+//     .where(eq(TableBasicAuthAccounts.uuid, uuid))
+// }
 
 const MAX_ATTEMPTS = 5
 
@@ -675,7 +674,7 @@ export async function getPermissionsByBasicAuthV2(basicAuthHeader: string): Prom
     return { level: 'denied', tenants: [] }
   }
   if (account.loginAttempts >= MAX_ATTEMPTS) {
-    await lockBasicAuthAccount(account.uuid)
+    // await lockBasicAuthAccount(account.uuid)
     return { level: 'denied', tenants: [] }
   }
 

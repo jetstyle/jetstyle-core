@@ -1,3 +1,5 @@
+import path from 'path'
+
 import { drizzle } from 'drizzle-orm/postgres-js'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
@@ -15,10 +17,14 @@ function getConnectionStr(config: AuthServerConfig) {
 export async function applyMigrations(config: AuthServerConfig) {
   const connectionStr = getConnectionStr(config)
   const migrationClient = postgres(connectionStr, { max: 1 })
+  const migrationsFolder = path.resolve(config.db.migrationsFolder)
+
+  console.log('auth @ migrationFolder', migrationsFolder)
+
   await migrate(
     drizzle(migrationClient, { schema }),
     {
-      migrationsFolder: config.db.migrationsFolder,
+      migrationsFolder: migrationsFolder,
       migrationsSchema: 'drizzle_auth_svc',
     }
   )
