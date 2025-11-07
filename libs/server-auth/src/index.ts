@@ -128,22 +128,22 @@ export async function getPermissions<T extends DB>(
         const account = await findBasicAuthAccountByLogin(db, login)
         const MAX_ATTEMPTS = 5
         if (!account || account.status !== 'active' || account.loginAttempts >= MAX_ATTEMPTS) {
-          return { level: 'denied' }
+          return { level: 'denied', tenants: [] }
         }
         const ok = await bcrypt.compare(password, account.passwordHash || '')
         if (!ok) {
           await incrementLoginAttempt(db, account.uuid, account.loginAttempts)
-          return { level: 'denied' }
+          return { level: 'denied', tenants: [] }
         }
         await resetLoginAttempt(db, account.uuid)
         // Treat valid Basic as full access (admin-equivalent)
-        return { level: 'allowed' }
+        return { level: 'allowed', tenants: [] }
       }
     } catch (_e) {
       // fall through to JWT path
     }
     // If Basic was provided but not valid, deny
-    return { level: 'denied' }
+    return { level: 'denied', tenants: [] }
   }
 
   const token = parseAuthHeader(authHeader)
@@ -198,24 +198,4 @@ export async function getPermissions<T extends DB>(
     level: 'denied',
     tenants: []
   }
-}
-
-export function getPermissionsByBasicAuth(basicAuthHeader: string): Permission {
-  if (!basicAuthHeader) {
-    return { level: 'denied', tenants: [] }
-  }
-
-  const [type, credentials] = basicAuthHeader.split(' ')
-  if (type !== 'Basic' || !credentials) {
-    return { level: 'denied', tenants: [] }
-  }
-  const decoded = Buffer.from(credentials, 'base64').toString('utf-8')
-  const [username, password] = decoded.split(':')
-  const account = config.fullAccessBasicAccounts.find(
-    acc => acc.username === username && acc.password === password
-  )
-  if (account) {
-    return { level: 'allowed', tenants: [] }
-  }
-  return { level: 'denied', tenants: [] }
 }
