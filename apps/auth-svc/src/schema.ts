@@ -107,7 +107,6 @@ export type NewAuthCodeRequest = z.infer<typeof AuthCodeInsertSchema>
 
 export const AuthCodeSelectSchema = createSelectSchema(TableAuthCodes)
 
-
 // ****************************************************************************
 // PermissionBind entity (ported from aibi)
 
