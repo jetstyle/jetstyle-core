@@ -16,7 +16,7 @@ function getConnectionStr(config: AuthServerConfig) {
 
 export async function applyMigrations(config: AuthServerConfig) {
   const connectionStr = getConnectionStr(config)
-  const migrationClient = postgres(connectionStr, { max: 1 })
+  const migrationClient = postgres(connectionStr, { max: 1, ssl: (config.db.ssl as unknown as any) })
   const migrationsFolder = path.resolve(config.db.migrationsFolder)
 
   console.log('auth @ migrationFolder', migrationsFolder)
@@ -35,7 +35,7 @@ let GLOBAL_CONNECTION: DB | undefined
 export function createDbConnection(config: AuthServerConfig): DB {
   const connectionStr = getConnectionStr(config)
   try {
-    const queryClient = postgres(connectionStr)
+    const queryClient = postgres(connectionStr, { ssl: (config.db.ssl as unknown as any) })
     const db = drizzle(queryClient, { schema })
     GLOBAL_CONNECTION = db
     console.log('Database connected successfully')
