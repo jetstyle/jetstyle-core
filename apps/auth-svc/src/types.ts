@@ -34,6 +34,7 @@ export type AuthServerConfig = {
     database: string
     logging: boolean
     migrationsFolder: string
+    ssl?: string
   },
   adminTenant?: string
   adminPassword?: string

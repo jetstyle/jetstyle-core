@@ -31,6 +31,7 @@ export const config: AuthServerConfig = {
     database: process.env.PG__DATABASE ?? '',
     logging: (process.env.PG__LOGGING === 'true' || process.env.PG__LOGGING === 'enabled'),
     migrationsFolder: process.env.AUTH_SVC__MIGRATIONS ?? 'core/apps/auth-svc/drizzle',
+    ssl: process.env.PG__SSL,
   },
   allowedRegistrationDomains: [],
   adminTenant: process.env.AUTH__ADMIN_TENANT ?? 'platform',
@@ -43,3 +44,9 @@ if (process.env.AUTH__ALLOWED_REGISTRATION_DOMAINS) {
     .filter(Boolean)
   config.allowedRegistrationDomains = domains
 }
+
+// Debug logs for DB env resolution
+console.log('[auth-svc] PG host (process.env.PG__HOST):', process.env.PG__HOST)
+console.log('[auth-svc] resolved db.host:', config.db.host)
+console.log('[auth-svc] migrationsFolder:', config.db.migrationsFolder)
+console.log('[auth-svc] cwd:', process.cwd())
