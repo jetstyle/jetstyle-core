@@ -236,8 +236,9 @@ export class AuthServer {
     if (!authCode) {
       return Err('auth_code_mismatch')
     }
-    if (authCode.liveTime > Date.now()) {
-      return Err('auth_code_expired')
+    const authCodeValidation = this.validateAuthCode(authCode)
+    if (authCodeValidation.err !== null) {
+      return authCodeValidation
     }
 
     const user = await this.getUserById(authCode.userId)
@@ -549,6 +550,105 @@ export class AuthServer {
       return Ok(result)
     } catch(err: any) {
       return Err('password_checking_hash_error', err.toString())
+    }
+  }
+
+  async createNumericAuthCode(userId: string): Promise<TResult<string>> {
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    return this.saveAuthCode(userId, code)
+  }
+
+  async verifyAuthCodeForUser(userId: string, code: string): Promise<TResult<AuthCode>> {
+    const authCode = await this.getAuthCode(code)
+    if (!authCode || authCode.userId !== userId) {
+      return Err('auth_code_mismatch')
+    }
+
+    const validation = this.validateAuthCode(authCode)
+    if (validation.err !== null) {
+      return validation
+    }
+
+    return validation
+  }
+
+  async consumeAuthCode(uuid: string) {
+    await this.db.delete(TableAuthCodes)
+      .where(eq(TableAuthCodes.uuid, uuid))
+  }
+
+  async updateUserPassword(userId: string, newPassword: string): Promise<TResult<User>> {
+    const hashedPassword = await this.hashPassword(newPassword)
+    if (hashedPassword.err !== null) {
+      return Err(hashedPassword.err, hashedPassword.errDescription)
+    }
+
+    const updated = await this.db.update(TableUsers)
+      .set({
+        password: hashedPassword.value,
+        updatedAt: new Date(),
+      })
+      .where(eq(TableUsers.uuid, userId))
+      .returning()
+
+    if (!updated[0]) {
+      return Err('user_not_found')
+    }
+
+    return Ok(updated[0])
+  }
+
+  private validateAuthCode(authCode: AuthCode): TResult<AuthCode> {
+    const createdAtMs = this.resolveAuthCodeCreatedAt(authCode)
+    const now = Date.now()
+
+    if (createdAtMs !== null) {
+      if (authCode.bondTime && createdAtMs + authCode.bondTime > now) {
+        return Err('auth_code_not_ready')
+      }
+
+      if (authCode.liveTime && createdAtMs + authCode.liveTime < now) {
+        return Err('auth_code_expired')
+      }
+    }
+
+    return Ok(authCode)
+  }
+
+  private resolveAuthCodeCreatedAt(authCode: AuthCode): number | null {
+    if (!authCode.createdAt) {
+      return null
+    }
+
+    if (authCode.createdAt instanceof Date) {
+      return authCode.createdAt.getTime()
+    }
+
+    try {
+      return new Date(authCode.createdAt).getTime()
+    } catch (err) {
+      console.warn('Failed to resolve auth code createdAt', err)
+      return null
+    }
+  }
+
+  private async saveAuthCode(userId: string, code: string): Promise<TResult<string>> {
+    try {
+      await this.db.delete(TableAuthCodes)
+        .where(eq(TableAuthCodes.userId, userId))
+
+      await this.db.insert(TableAuthCodes)
+        .values({
+          uuid: randomUUID(),
+          userId,
+          code,
+          bondTime: this.config.codeBondTime,
+          liveTime: this.config.codeLiveTime,
+        })
+
+      return Ok(code)
+    } catch (error: any) {
+      return Err('code_issue_failed', error?.toString?.())
     }
   }
 
