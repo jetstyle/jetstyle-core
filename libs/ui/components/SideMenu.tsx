@@ -1,11 +1,12 @@
 'use client'
-import React, { useEffect, useRef } from 'react'
+import cn from 'classnames'
 import { useTranslations } from 'next-intl'
+import React, { useEffect, useRef } from 'react'
+
+import ArrowCollapse from './icons/ArrowCollapse'
+import LoggedUser  from './LoggedUser'
 import MainMenu from './MainMenu'
 import ThemeController from './ThemeController'
-import cn from 'classnames'
-import LoggedUser  from './LoggedUser'
-import ArrowCollapse from './icons/ArrowCollapse'
 import { useUIState } from '../hooks/use-ui-state'
 
 type TSideMenuProps = {

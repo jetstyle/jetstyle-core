@@ -1,7 +1,7 @@
 import ResourceDrawerForm from './resource-drawer-form/ResourceDrawerForm'
 import { postResource, patchResource } from '../helpers/api'
-import type { Resource } from '../types/types'
 import { TypeResourceDescription } from '../types/file-manager'
+import type { Resource } from '../types/types'
 
 type TResourceEditorProps = {
     instance?: Resource,

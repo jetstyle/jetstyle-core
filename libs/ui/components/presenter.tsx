@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
-import type { PresenterProps } from '../types/types'
 import { fetchResourceById } from '../helpers/api'
+import type { PresenterProps } from '../types/types'
 
 export default function Presenter({ instance, prop, options }: PresenterProps) {
   const entityId = instance[prop.propName]

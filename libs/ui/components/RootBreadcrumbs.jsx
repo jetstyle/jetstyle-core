@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import FolderIcon from './icons/Folder'
 import { useTranslations } from 'next-intl'
 import { useContext } from 'react'
+
 import Drawer from './Drawer'
+import FolderIcon from './icons/Folder'
 
 export default function RootBreadcrumbs({ pathname }){
   const t = useTranslations('Files')

@@ -1,27 +1,25 @@
 'use client'
-import React, { useContext, useState, useRef, useMemo, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import cn from 'classnames'
 import _ from 'lodash'
+import { useTranslations } from 'next-intl'
+import React, { useContext, useState, useRef, useMemo, useEffect } from 'react'
+
+import { propsToValues } from '../../helpers/forms'
+import useTenant from '../../hooks/useTenant'
+import { ARCHIVE_MIME_TYPES } from '../../models/descriptions'
+import { translit } from '../../models/helpers'
+import scrollStyles from '../../styles/styles.module.scss'
+import { TypeResourceDescription, TypeResourceItem } from '../../types/file-manager'
 import Drawer from '../Drawer'
 import CloseIcon from '../icons/Close'
-import cn from 'classnames'
-import  './style.scss'
-
-import scrollStyles from '../../styles/styles.module.scss'
-
-import { translit } from '../../models/helpers'
-import { ARCHIVE_MIME_TYPES } from '../../models/descriptions'
-
-import useTenant from '../../hooks/useTenant'
-import { TypeResourceDescription, TypeResourceItem } from '../../types/file-manager'
-import { propsToValues } from '../../helpers/forms'
 import MultiChoice from '../multi-choice'
+import './style.scss'
 
 type TypeResourceDrawerFormProps = {
   resource?: string | null;
   dataToChange?: TypeResourceItem | null;
   setDataToChange?: React.Dispatch<React.SetStateAction<TypeResourceItem | null>>;
-  setFileDragged?: React.Dispatch<React.SetStateAction<File[] | null>>;
+  setFileDragged?: React.Dispatch<React.SetStateAction<Array<File> | null>>;
   resourceDescription: TypeResourceDescription;
   instance?: any;
   onSubmit?: any;

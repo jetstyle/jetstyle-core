@@ -1,5 +1,5 @@
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -48,16 +48,16 @@ function resolveMigrationsFolder(config: AuthServerConfig) {
   const maxLevels = 8
   for (let i = 0; i < maxLevels; i++) {
     const candidate = path.join(dir, 'drizzle')
-    try {
+    if (fs.existsSync(candidate)) {
       const stat = fs.statSync(candidate)
       if (stat.isDirectory()) {
         return candidate
       }
-    } catch {
-      // continue
     }
     const parent = path.dirname(dir)
-    if (parent === dir) break
+    if (parent === dir) {
+      break
+    }
     dir = parent
   }
 
@@ -68,9 +68,9 @@ function resolveMigrationsFolder(config: AuthServerConfig) {
     path.resolve(fileDir, '../../../drizzle'),
   ]
   for (const c of fallbackCandidates) {
-    try {
-      if (fs.statSync(c).isDirectory()) return c
-    } catch {}
+    if (fs.existsSync(c) && fs.statSync(c).isDirectory()) {
+      return c
+    }
   }
 
   throw new Error('[auth-svc] Unable to locate migrations folder "drizzle" starting from ' + fileDir)

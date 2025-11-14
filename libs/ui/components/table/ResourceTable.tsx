@@ -2,8 +2,8 @@
 
 import { useTranslations } from 'next-intl'
 
-import useFetch from '../../hooks/useFetch'
 import ResourceTableRow from './ResourceTableRow'
+import useFetch from '../../hooks/useFetch'
 
 export default function ResourceTable({
   apiService,

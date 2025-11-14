@@ -1,5 +1,6 @@
 
 import type { JSX } from 'react'
+
 import { type ResourceProp } from './types'
 
 type TypeCustomButton = {
@@ -7,7 +8,7 @@ type TypeCustomButton = {
     customButtonTitle?: string;
     icon: () => JSX.Element;
     // onClick?: () => void;
-    onClick: (fullData: TypeResourceItem[] | null, onRefresh: () => void) => void;
+    onClick: (fullData: Array<TypeResourceItem> | null, onRefresh: () => void) => void;
 };
 
 type TypeCustomValueToEdit = {
@@ -24,14 +25,14 @@ export type TypeCustomFolder = {
     allowRecursive?: boolean; // отвечает за возможность создания такой же "папки" внутри самого себя
     allowFolders?: boolean; // отвечает за возможность создания ЛЮБЫХ ПАПОК ВНУТРИ
     allowCustomButtons?: boolean; // Разрешение на отображение кастомных кнопок
-    customButtons?: TypeCustomButton[]; // Массив кастомных кнопок
-    autoCreateSubFolders?: { path: string; displayName: string }[]; // Автоматическое создание подпапок внутри созданного CustomFolder
+    customButtons?: Array<TypeCustomButton>; // Массив кастомных кнопок
+    autoCreateSubFolders?: Array<{ path: string; displayName: string }>; // Автоматическое создание подпапок внутри созданного CustomFolder
     customValuesToEdit?: TypeCustomValueToEdit; // Доп. значения для редактирования
 };
 
-export type TypeCustomFolders = TypeCustomFolder[];
+export type TypeCustomFolders = Array<TypeCustomFolder>;
 
-export interface TypeResourceItem {
+export type TypeResourceItem = {
     resource_id?: string;
     path?: string;
     display_name?: string;
@@ -39,10 +40,10 @@ export interface TypeResourceItem {
     [key: string]: any
 }
 
-export interface TypeResourceDescription {
+export type TypeResourceDescription = {
     props: Array<ResourceProp>;
     uuidProp?: string;
-    requiredProps?: string[];
+    requiredProps?: Array<string>;
     needTenant?: boolean;
     [key: string]: any;
 }

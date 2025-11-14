@@ -1,10 +1,9 @@
 import { useTranslations } from 'next-intl'
-
-import { Cell } from './cell'
-import styles from './Table.module.scss'
 import React from 'react'
 
 import { TypeCustomFolders, TypeResourceDescription, TypeResourceItem } from './../../types/file-manager'
+import { Cell } from './cell'
+import styles from './Table.module.scss'
 
 type TTableRowProps = {
   instance: any
@@ -82,9 +81,9 @@ export function TableRow(props: TTableRowProps) {
   )
 }
 
-interface TypeTableProps {
+type TypeTableProps = {
   resourceDescription: TypeResourceDescription;
-  dataList?: TypeResourceItem[]| null;
+  dataList?: Array<TypeResourceItem>| null;
   actionsComponent?: any;
   iconComponent?: any;
   onRowClick?: (row: any) => void;

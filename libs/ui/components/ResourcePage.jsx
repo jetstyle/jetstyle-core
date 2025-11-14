@@ -1,10 +1,11 @@
 'use client'
 import { useTranslations } from 'next-intl'
-import Drawer from './Drawer'
-import ResourceTable from './table/ResourceTable'
-import Actions from './actions'
-import ResourceEditor from './ResourceEditor'
 import { useState } from 'react'
+
+import Actions from './actions'
+import Drawer from './Drawer'
+import ResourceEditor from './ResourceEditor'
+import ResourceTable from './table/ResourceTable'
 
 export default function ResourcePage({
   resourceDescription,

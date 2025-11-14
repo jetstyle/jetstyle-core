@@ -1,11 +1,9 @@
 'use client'
 
-import { createContext, useContext, useState, useMemo, useEffect } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { createContext, useContext, useState, useMemo, useEffect } from 'react'
 
 import useConfig from './useConfig'
-
-import { navRoot, parseLocation } from '../helpers/nav'
 import { fetchResource } from '../helpers/api'
 import {
   type AuthTokens,
@@ -13,6 +11,7 @@ import {
   getTokens,
   setRefreshToken,
 } from '../helpers/auth'
+import { navRoot, parseLocation } from '../helpers/nav'
 
 type TAuthContext = {
   auth: AuthTokens | null

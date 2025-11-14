@@ -1,7 +1,7 @@
+import cn from 'classnames'
 import React, { useState } from 'react'
 
 import CloseIcon from './icons/Close'
-import cn from 'classnames'
 
 const DrawerContext = React.createContext()
 

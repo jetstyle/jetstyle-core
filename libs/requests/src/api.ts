@@ -1,13 +1,14 @@
-import type { FetchResourceOptions, PostResourceOptions, PatchResourceOptions, DeleteResourceOptions, TResult } from './types'
-import { getTenant } from './utils'
-import { Ok, Err } from './utils'
 import { getAccessToken as defaultGetAccessToken } from './auth'
 import { dataLayer } from './index'
+import type { DeleteResourceOptions, FetchResourceOptions, PatchResourceOptions, PostResourceOptions, TResult } from './types'
+import { Err, Ok, getTenant } from './utils'
 
 function buildUrl(apiPath: string, query: Record<string, any> = {}): string {
   const urlParams = new URLSearchParams(query)
   const tenant = query.tenant ? query.tenant : getTenant()
-  if (tenant) urlParams.set('tenant', tenant)
+  if (tenant) {
+    urlParams.set('tenant', tenant)
+  }
 
   const qs = urlParams.toString()
   return qs ? `${apiPath}?${qs}` : apiPath

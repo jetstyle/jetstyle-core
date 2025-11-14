@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
-import useAuth from '../hooks/use-auth'
-import LogOut from './icons/LogOut'
 import cn from 'classnames'
+import { usePathname, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import React, { useMemo } from 'react'
+
+import useAuth from '../hooks/use-auth'
 import { revokeRefreshToken } from './../helpers/auth'
 import { navRoot, parseLocation } from './../helpers/nav'
-import { usePathname, useRouter } from 'next/navigation'
+import LogOut from './icons/LogOut'
 
 type TypeLoggedUser = {
   isShowMenu: boolean

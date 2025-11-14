@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------------
 
 import { useEffect, useMemo, useState } from 'react'
+
 import { TResult } from './types'
 
 export type ID = string
@@ -20,12 +21,18 @@ function stableStringify(value: any): string {
   const seen = new WeakSet()
   const stringify = (v: any): any => {
     if (v && typeof v === 'object') {
-      if (seen.has(v)) return '[Circular]'
+      if (seen.has(v)) {
+        return '[Circular]'
+      }
       seen.add(v)
-      if (Array.isArray(v)) return v.map(stringify)
+      if (Array.isArray(v)) {
+        return v.map(stringify)
+      }
       const keys = Object.keys(v).sort()
       const out: Record<string, any> = {}
-      for (const k of keys) out[k] = stringify(v[k])
+      for (const k of keys) {
+        out[k] = stringify(v[k])
+      }
       return out
     }
     return v
@@ -42,16 +49,22 @@ class Emitter {
     return () => {
       if (set) {
         set.delete(cb)
-        if (set.size === 0) this.listeners.delete(key)
+        if (set.size === 0) {
+          this.listeners.delete(key)
+        }
       }
     }
   }
   emit(key: string) {
     const set = this.listeners.get(key)
-    if (!set) return
-    for (const cb of [...set]) { try { cb() } catch (e) {
-      // ignore
-    } }
+    if (!set) {
+      return
+    }
+    for (const cb of [...set]) {
+      try { cb() } catch (e) {
+        // ignore
+      }
+    }
   }
   count(key: string) { return this.listeners.get(key)?.size ?? 0 }
 }
@@ -94,11 +107,15 @@ export function createDataLayer() {
   const INF_Q_KEY = (type: string, paramsKey: string) => `${type}|q|${paramsKey}`
 
   function ensureEntityMap(type: string) {
-    if (!entities.has(type)) entities.set(type, new Map())
+    if (!entities.has(type)) {
+      entities.set(type, new Map())
+    }
     return entities.get(type)!
   }
   function ensureQueryMap(type: string) {
-    if (!queries.has(type)) queries.set(type, new Map())
+    if (!queries.has(type)) {
+      queries.set(type, new Map())
+    }
     return queries.get(type)!
   }
 
@@ -122,7 +139,9 @@ export function createDataLayer() {
   }
 
   function setEntities<T>(type: string, items: Array<T>) {
-    for (const it of items) upsertEntity(type, it)
+    for (const it of items) {
+      upsertEntity(type, it)
+    }
   }
 
   function updateQuery<T>(type: string, paramsKey: string, items: Array<T>) {
@@ -146,7 +165,9 @@ export function createDataLayer() {
 
   function getQueryResult<T>(type: string, paramsKey: string): { items: Array<T>; initialLoading: boolean; refreshing: boolean; err?: string | null } {
     const q = ensureQueryMap(type).get(paramsKey)
-    if (!q) return { items: [], initialLoading: false, refreshing: false, err: null }
+    if (!q) {
+      return { items: [], initialLoading: false, refreshing: false, err: null }
+    }
     const map = ensureEntityMap(type)
     const items = q.ids.map(id => map.get(id)?.value).filter(Boolean) as Array<T>
     return { items, initialLoading: q.initialLoading, refreshing: q.refreshing, err: q.err }
@@ -179,9 +200,13 @@ export function createDataLayer() {
 
   async function fetchById<T>(type: string, id: ID) {
     const cfg = resources.get(type)
-    if (!cfg?.fetchById) throw new Error(`fetchById not configured for ${type}`)
+    if (!cfg?.fetchById) {
+      throw new Error(`fetchById not configured for ${type}`)
+    }
     const key = INF_ID_KEY(type, id)
-    if (inflight.has(key)) return inflight.get(key)!
+    if (inflight.has(key)) {
+      return inflight.get(key)!
+    }
     const p = cfg.fetchById(id)
       .then(res => {
         if (res.err == null) {
@@ -197,10 +222,14 @@ export function createDataLayer() {
 
   async function fetchList<T, P>(type: string, params: P) {
     const cfg = resources.get(type)
-    if (!cfg?.fetchList) throw new Error(`fetchList not configured for ${type}`)
+    if (!cfg?.fetchList) {
+      throw new Error(`fetchList not configured for ${type}`)
+    }
     const paramsKey = stableStringify(params)
     const key = INF_Q_KEY(type, paramsKey)
-    if (inflight.has(key)) return inflight.get(key)!
+    if (inflight.has(key)) {
+      return inflight.get(key)!
+    }
     markQueryStart(type, paramsKey)
     const p = cfg.fetchList(params as any)
       .then(res => {
@@ -223,17 +252,25 @@ export function createDataLayer() {
 
   function invalidateType(type: string) {
     const qmap = ensureQueryMap(type)
-    for (const q of qmap.values()) q.updatedAt = 0
+    for (const q of qmap.values()) {
+      q.updatedAt = 0
+    }
     emitter.emit(TYPE_KEY(type))
   }
   function invalidateId(type: string, id: ID) {
     const map = ensureEntityMap(type)
-    const e = map.get(id); if (e) e.updatedAt = 0
+    const e = map.get(id)
+    if (e) {
+      e.updatedAt = 0
+    }
     emitter.emit(ID_KEY(type, id))
   }
   function invalidateQuery(type: string, params: any) {
     const key = stableStringify(params)
-    const q = ensureQueryMap(type).get(key); if (q) q.updatedAt = 0
+    const q = ensureQueryMap(type).get(key)
+    if (q) {
+      q.updatedAt = 0
+    }
     emitter.emit(QUERY_KEY(type, key))
   }
 
@@ -261,11 +298,15 @@ export function createDataLayer() {
 
     useEffect(() => {
       const shouldFetch = opts.fetch !== false && (!snap.value || (now() - snap.updatedAt > staleTime))
-      if (shouldFetch && cfg?.fetchById) fetchById<T>(type, id)
+      if (shouldFetch && cfg?.fetchById) {
+        fetchById<T>(type, id)
+      }
     }, [type, id, staleTime, cfg?.fetchById, snap.value, snap.updatedAt])
 
     useEffect(() => {
-      if (!opts.poll) return
+      if (!opts.poll) {
+        return
+      }
       const pollKey = INF_ID_KEY(type, id)
       if (!pollers.has(pollKey) && emitter.count(key) > 0) {
         const intv = setInterval(() => { fetchById<T>(type, id) }, opts.poll)
@@ -305,11 +346,15 @@ export function createDataLayer() {
 
     useEffect(() => {
       const shouldFetch = opts.fetch !== false && !snap.err && (snap.updatedAt === 0 || (now() - snap.updatedAt > staleTime))
-      if (shouldFetch && cfg?.fetchList) fetchList<T, P>(type, params)
+      if (shouldFetch && cfg?.fetchList) {
+        fetchList<T, P>(type, params)
+      }
     }, [type, paramsKey, staleTime, cfg?.fetchList, snap.items, snap.updatedAt])
 
     useEffect(() => {
-      if (!opts.poll) return
+      if (!opts.poll) {
+        return
+      }
       const pollKey = INF_Q_KEY(type, paramsKey)
       if (!pollers.has(pollKey) && emitter.count(qKey) > 0) {
         const intv = setInterval(() => { fetchList<T, P>(type, params) }, opts.poll)
@@ -336,7 +381,9 @@ export function createDataLayer() {
       for (const q of qmap.values()) {
         const before = q.ids.length
         q.ids = q.ids.filter(i => i !== id)
-        if (q.ids.length !== before) emitter.emit(QUERY_KEY(type, q.paramsKey))
+        if (q.ids.length !== before) {
+          emitter.emit(QUERY_KEY(type, q.paramsKey))
+        }
       }
     }
   }

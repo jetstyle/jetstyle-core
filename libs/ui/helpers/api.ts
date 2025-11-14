@@ -1,10 +1,11 @@
 import superagent from 'superagent'
 import { mutate } from 'swr'
 
+import { type TResult, Ok, Err } from '@jetstyle/utils'
+
+import { getTenant } from './nav'
 import { getAccessToken } from '../helpers/auth'
 import type { Resource, APIResourceProps } from '../types/types'
-import { type TResult, Ok, Err } from '@jetstyle/utils'
-import { getTenant } from './nav'
 
 const CONFIG_PATH = process.env.NEXT_PUBLIC_CONFIG_PATH
 
