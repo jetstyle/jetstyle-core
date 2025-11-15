@@ -136,12 +136,7 @@ export const authRoutes = app.openapi(
     }),
     async (c) => {
       const authServer = c.get('authServer')
-      const dbConn = (await import('../db.js')).getDbConnection()
-      const { randomUUID } = await import('node:crypto')
-      const { TableAuthCodes } = await import('../schema.js')
-      const { config } = await import('../config.js')
-
-      const body = c.req.valid('json') as { email: string }
+      const body = c.req.valid('json')
 
       const users = await authServer.findUsersByEmail(body.email)
       if (!users || !users[0]) {
@@ -149,24 +144,21 @@ export const authRoutes = app.openapi(
       }
       const user = users[0]
 
-      // generate 6-digit numeric code
-      const code = Math.floor(100000 + Math.random() * 900000).toString()
-
-      // store code
-      try {
-        await dbConn.insert(TableAuthCodes).values({
-          uuid: randomUUID(),
-          userId: user.uuid,
-          code,
-          bondTime: config.codeBondTime,
-          liveTime: config.codeLiveTime
-        })
-      } catch (e: any) {
-        return c.json({ err: 'code_issue_failed', errDescription: e?.toString?.() }, 500)
+      const codeResult = await authServer.createNumericAuthCode(user.uuid)
+      if (codeResult.err !== null) {
+        return c.json(codeResult, 500)
       }
 
-      // placeholder sender
-      console.log('[auth] send verification code to email:', body.email, 'code:', code)
+      const code = codeResult.value
+
+      if (authServer.emailSender) {
+        const sendResult = authServer.emailSender.sendEmail(body.email, `Your verification code: ${code}`)
+        if (sendResult.err !== null) {
+          console.warn('[auth] failed to send verification email', sendResult.err)
+        }
+      } else {
+        console.log('[auth] send verification code to email:', body.email, 'code:', code)
+      }
 
       return c.json({ status: 'ok' }, 200)
     }
@@ -252,6 +244,266 @@ export const authRoutes = app.openapi(
         accessToken: result.value.accessToken,
         refreshToken: result.value.refreshToken,
       }, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Auth'],
+      path: '/password/email/request-code',
+      description: 'Issues a password change confirmation code for a user identified by email.',
+      request: {
+        body: {
+          description: 'Request a password change confirmation code',
+          content: {
+            'application/json': {
+              schema: z.object({
+                email: z.string().email()
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Code has been issued',
+          content: {
+            'application/json': {
+              schema: z.object({
+                status: z.string()
+              })
+            }
+          }
+        },
+        404: {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        400: {
+          description: 'Password change is unavailable for the user',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        500: {
+          description: 'Failed to issue a code',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const authServer = c.get('authServer')
+      const body = c.req.valid('json') as { email: string }
+
+      const users = await authServer.findUsersByEmail(body.email)
+      if (!users || !users[0]) {
+        return c.json({ err: 'user_not_found' }, 404)
+      }
+
+      const user = users[0]
+      if (!user.password) {
+        return c.json({ err: 'auth_by_password_unavailable_for_user' }, 400)
+      }
+
+      const codeResult = await authServer.createNumericAuthCode(user.uuid)
+      if (codeResult.err !== null) {
+        return c.json(codeResult, 500)
+      }
+
+      const code = codeResult.value
+
+      if (authServer.emailSender) {
+        const sendResult = authServer.emailSender.sendEmail(body.email, `Your password change code: ${code}`)
+        if (sendResult.err !== null) {
+          console.warn('[auth] failed to send password change email', sendResult.err)
+        }
+      } else {
+        console.log('[auth] send password change code to email:', body.email, 'code:', code)
+      }
+
+      return c.json({ status: 'ok' }, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Auth'],
+      path: '/password/email/confirm',
+      description: 'Updates password for an email-password user after code confirmation.',
+      request: {
+        body: {
+          description: 'Confirm password change request',
+          content: {
+            'application/json': {
+              schema: z.object({
+                email: z.string().email(),
+                code: z.string(),
+                newPassword: z.string().min(8)
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Password has been updated',
+          content: {
+            'application/json': {
+              schema: z.object({
+                status: z.string()
+              })
+            }
+          }
+        },
+        400: {
+          description: 'Malformed request or invalid code',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        404: {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const authServer = c.get('authServer')
+      const body = c.req.valid('json')
+
+      const users = await authServer.findUsersByEmail(body.email)
+      if (!users || !users[0]) {
+        return c.json({ err: 'user_not_found' }, 404)
+      }
+
+      const user = users[0]
+      if (!user.password) {
+        return c.json({ err: 'auth_by_password_unavailable_for_user' }, 400)
+      }
+
+      const codeValidation = await authServer.verifyAuthCodeForUser(user.uuid, body.code)
+      if (codeValidation.err !== null) {
+        if (codeValidation.err === 'auth_code_mismatch') {
+          return c.json(codeValidation, 400)
+        }
+        if (codeValidation.err === 'auth_code_expired' || codeValidation.err === 'auth_code_not_ready') {
+          return c.json(codeValidation, 400)
+        }
+        return c.json(codeValidation, 400)
+      }
+
+      const updateResult = await authServer.updateUserPassword(user.uuid, body.newPassword)
+      if (updateResult.err !== null) {
+        return c.json(updateResult, 400)
+      }
+
+      await authServer.consumeAuthCode(codeValidation.value.uuid)
+
+      return c.json({ status: 'ok' }, 200)
+    }
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      tags: ['Auth'],
+      path: '/password/username/change',
+      description: 'Updates password for a username-password user after validating the current password.',
+      request: {
+        body: {
+          description: 'Change password using username and current password',
+          content: {
+            'application/json': {
+              schema: z.object({
+                username: z.string(),
+                currentPassword: z.string(),
+                newPassword: z.string().min(8)
+              })
+            }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Password has been updated',
+          content: {
+            'application/json': {
+              schema: z.object({
+                status: z.string()
+              })
+            }
+          }
+        },
+        400: {
+          description: 'Malformed request or password change unavailable',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        403: {
+          description: 'Current password mismatch',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        },
+        404: {
+          description: 'User not found',
+          content: {
+            'application/json': {
+              schema: ErrRespValidator
+            }
+          }
+        }
+      }
+    }),
+    async (c) => {
+      const authServer = c.get('authServer')
+      const body = c.req.valid('json') as { username: string; currentPassword: string; newPassword: string }
+
+      const users = await authServer.findUsersByUsername(body.username)
+      if (!users || !users[0]) {
+        return c.json({ err: 'user_not_found' }, 404)
+      }
+
+      const user = users[0]
+      if (!user.password) {
+        return c.json({ err: 'auth_by_password_unavailable_for_user' }, 400)
+      }
+
+      const passwordCheck = await authServer.comparePassword(body.currentPassword, user.password)
+      if (passwordCheck.err !== null) {
+        return c.json(passwordCheck, 400)
+      }
+
+      if (!passwordCheck.value) {
+        return c.json({ err: 'password_mismatch' }, 403)
+      }
+
+      const updateResult = await authServer.updateUserPassword(user.uuid, body.newPassword)
+      if (updateResult.err !== null) {
+        return c.json(updateResult, 400)
+      }
+
+      return c.json({ status: 'ok' }, 200)
     }
   )
   .openapi(
