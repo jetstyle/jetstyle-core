@@ -61,6 +61,7 @@ class Emitter {
       return
     }
     for (const cb of [...set]) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       try { cb() } catch (e) {
         // ignore
       }

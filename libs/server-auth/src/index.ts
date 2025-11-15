@@ -138,6 +138,7 @@ export async function getPermissions<T extends DB>(
         // Treat valid Basic as full access (admin-equivalent)
         return { level: 'allowed', tenants: [] }
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
       // fall through to JWT path
     }
