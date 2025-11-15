@@ -136,7 +136,7 @@ export const authRoutes = app.openapi(
     }),
     async (c) => {
       const authServer = c.get('authServer')
-      const body = c.req.valid('json') as { email: string }
+      const body = c.req.valid('json')
 
       const users = await authServer.findUsersByEmail(body.email)
       if (!users || !users[0]) {
@@ -385,7 +385,7 @@ export const authRoutes = app.openapi(
     }),
     async (c) => {
       const authServer = c.get('authServer')
-      const body = c.req.valid('json') as { email: string; code: string; newPassword: string }
+      const body = c.req.valid('json')
 
       const users = await authServer.findUsersByEmail(body.email)
       if (!users || !users[0]) {
