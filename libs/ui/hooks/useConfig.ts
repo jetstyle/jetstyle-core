@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+
 import { fetchConfig } from '../helpers/api'
 
 const CONFIG_PATH = process.env.NEXT_PUBLIC_CONFIG_PATH

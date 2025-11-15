@@ -1,7 +1,8 @@
-import formatterDate, { formatterDateDay } from '../formatters/formatterDate'
-import { useTranslations } from 'next-intl'
 import cn from 'classnames'
+import { useTranslations } from 'next-intl'
+
 import { badgeClassFunc } from '../../models/helpers'
+import formatterDate, { formatterDateDay } from '../formatters/formatterDate'
 
 export function Cell({ instance, prop }) {
   const t = useTranslations('Files')

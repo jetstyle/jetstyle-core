@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
-import { fetchConfig } from '../helpers/api'
+
 import { TResult, Ok, Err } from '@jetstyle/utils'
 
+import { fetchConfig } from '../helpers/api'
 import type { AuthParsedToken } from '../types/types'
 
 export type AuthTokenResponse = {

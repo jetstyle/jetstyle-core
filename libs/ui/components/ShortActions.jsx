@@ -1,10 +1,11 @@
-import React, { useContext } from 'react'
 import { Pencil } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import React, { useContext } from 'react'
+
+import { deleteResourceWithToken } from './../hooks/useFetch'
+import ConfirmModal from './confirm-modal/ConfirmModal'
 import Drawer from './Drawer'
 import DeleteIcon from './icons/Delete'
-import ConfirmModal from './confirm-modal/ConfirmModal'
-import { useTranslations } from 'next-intl'
-import { deleteResourceWithToken } from './../hooks/useFetch'
 
 const ShortActions = ({
   instance,

@@ -1,5 +1,6 @@
 {
   "name": "jetstyle-core",
+  "version": "^1.0.0",
   "workspaces": [
     "libs/*",
     "apps/*"
@@ -15,6 +16,13 @@
   },
   "devDependencies": {
     "dotenv-cli": "^7.4.1",
-    "turbo": "^1.12.4"
+    "turbo": "^1.12.4",
+    "eslint-import-resolver-typescript": "3.6.1",
+    "typescript": "5.9.3",
+    "eslint": "^8.57.1",
+    "@typescript-eslint/parser": "^8",
+    "@typescript-eslint/eslint-plugin": "^8",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-config-prettier": "^9.1.0"
   }
 }

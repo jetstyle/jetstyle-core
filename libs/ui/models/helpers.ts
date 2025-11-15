@@ -1,4 +1,5 @@
 import slugify from 'slugify'
+
 import { STATUS_CLASS_MAP } from '../models/descriptions'
 
 export function translit(str) {

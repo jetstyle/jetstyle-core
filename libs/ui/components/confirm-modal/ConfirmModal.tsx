@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import React, { useEffect, useRef, useState } from 'react'
+
 import useOutsideClick from '../../hooks/useOutsideClick'
 import DeleteIcon from '../icons/Delete.jsx'
 

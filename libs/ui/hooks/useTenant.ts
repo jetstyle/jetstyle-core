@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+
 import { parseLocation } from '../helpers/nav'
 
 export default function useTenant() {

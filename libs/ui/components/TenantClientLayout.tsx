@@ -1,9 +1,10 @@
 'use client'
 
 import React, { ReactNode } from 'react'
+
 import SideMenu from './SideMenu'
-import { useUIState } from '../hooks/use-ui-state'
 import useAuth from '../hooks/use-auth'
+import { useUIState } from '../hooks/use-ui-state'
 
 type TypeTenantClientLayout = {
     children?: ReactNode;

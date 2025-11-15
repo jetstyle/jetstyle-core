@@ -26,6 +26,7 @@
   "devDependencies": {
     "@jetstyle/eslint-config": "^1.0.0",
     "@jetstyle/typescript-config": "^1.0.0",
+    "@typescript-eslint/parser": "^8.46.4",
     "@types/lodash": "^4.17.10",
     "@types/node": "^12.0.10",
     "eslint": "^8.57.0",

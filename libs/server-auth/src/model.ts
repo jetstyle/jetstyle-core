@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 
-import type { DB } from './types.js'
 import { TableBasicAuthAccounts } from './schema.js'
+import type { DB } from './types.js'
 
 export type BasicAuthAccountLite = {
   uuid: string

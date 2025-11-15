@@ -17,6 +17,7 @@
     "@jetstyle/config-tailwind": "^1.0.0",
     "@jetstyle/eslint-config": "^1.0.0",
     "@jetstyle/typescript-config": "^1.0.0",
+    "@typescript-eslint/parser": "^8.46.4",
     "eslint": "^8.53.0",
     "typescript": "^5.3.3"
   },

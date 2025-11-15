@@ -1,11 +1,11 @@
+import bcrypt from 'bcrypt'
 import { type KeyLike, jwtVerify, importSPKI } from 'jose'
 
 import { TResult, Ok, Err, arrayIntersection } from '@jetstyle/utils'
-import bcrypt from 'bcrypt'
 
 import config from './config.js'
-import type { DB } from './types.js'
 import { findBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt } from './model.js'
+import type { DB } from './types.js'
 
 export type TAccessTokenPayload = {
   sub: string
@@ -138,6 +138,7 @@ export async function getPermissions<T extends DB>(
         // Treat valid Basic as full access (admin-equivalent)
         return { level: 'allowed', tenants: [] }
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
       // fall through to JWT path
     }

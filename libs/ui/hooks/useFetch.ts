@@ -1,4 +1,5 @@
 import useSWR  from 'swr'
+
 import { fetchResource } from '../helpers/api'
 
 type UseFetchOptions = {
@@ -10,7 +11,7 @@ type UseFetchOptions = {
 export default function useFetch<T>(
   apiPath: string,
   options?: UseFetchOptions,
-  dependencies: any[] = []
+  dependencies: Array<any> = []
 ) {
   const fetcher = async (apiPath: string) => {
     const resp = await fetchResource({

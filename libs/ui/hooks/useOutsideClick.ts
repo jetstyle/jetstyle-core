@@ -4,7 +4,7 @@ function useOutsideClick(
   ref: RefObject<HTMLElement | null>,
   onOutsideClick: any,
   shouldIgnore: (target: any) => boolean = () => false,
-  ignoreElements?: RefObject<HTMLElement | null>[] | null,
+  ignoreElements?: Array<RefObject<HTMLElement | null>> | null,
 ) {
   useEffect(() => {
     const handleClick = (event: any) => {

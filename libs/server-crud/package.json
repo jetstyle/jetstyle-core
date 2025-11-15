@@ -1,0 +1,25 @@
+{
+  "name": "@jetstyle/server-crud",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "eslint src/**.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@jetstyle/eslint-config": "^1.0.0",
+    "@jetstyle/typescript-config": "^1.0.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^0.14.7",
+    "drizzle-kit": "^0.31.0",
+    "drizzle-orm": "^0.41.0"
+  }
+}

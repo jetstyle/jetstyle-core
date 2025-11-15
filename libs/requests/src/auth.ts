@@ -1,6 +1,7 @@
+import jwt from 'jsonwebtoken'
+
 import type { AuthTokens, AuthParsedToken, AuthTokenResponse, TResult, TErr } from './types'
 import { Err, Ok } from './utils'
-import jwt from 'jsonwebtoken'
 
 let TOKENS: AuthTokens | null = null
 let REFRESH_TOKEN: string | null = null

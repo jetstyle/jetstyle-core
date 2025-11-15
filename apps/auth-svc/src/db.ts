@@ -1,4 +1,6 @@
+import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 import { drizzle } from 'drizzle-orm/postgres-js'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
@@ -14,10 +16,70 @@ function getConnectionStr(config: AuthServerConfig) {
   return `postgres://${config.db.username}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
 }
 
+function resolveMigrationsFolder(config: AuthServerConfig) {
+  // 1) Explicit ENV override (kept for backward compatibility); relative to CWD by design
+  const override = process.env.AUTH_SVC__MIGRATIONS
+  if (override && override.trim().length > 0) {
+    const envResolved = path.resolve(override)
+    if (fs.existsSync(envResolved) && fs.statSync(envResolved).isDirectory()) {
+      return envResolved
+    }
+  }
+
+  // 2) Config override if provided: prefer path relative to this file location (ESM-safe), then absolute, then CWD
+  const cfgPath = config.db.migrationsFolder
+  const fileDir = path.dirname(fileURLToPath(import.meta.url))
+  if (cfgPath && cfgPath.trim().length > 0) {
+    const byFileDir = path.resolve(fileDir, cfgPath)
+    if (fs.existsSync(byFileDir) && fs.statSync(byFileDir).isDirectory()) {
+      return byFileDir
+    }
+    if (path.isAbsolute(cfgPath) && fs.existsSync(cfgPath) && fs.statSync(cfgPath).isDirectory()) {
+      return cfgPath
+    }
+    const byCwd = path.resolve(cfgPath)
+    if (fs.existsSync(byCwd) && fs.statSync(byCwd).isDirectory()) {
+      return byCwd
+    }
+  }
+
+  // 3) Auto-detect by walking up from the current file (robust for dist/src, submodules, different CWDs)
+  let dir = fileDir
+  const maxLevels = 8
+  for (let i = 0; i < maxLevels; i++) {
+    const candidate = path.join(dir, 'drizzle')
+    if (fs.existsSync(candidate)) {
+      const stat = fs.statSync(candidate)
+      if (stat.isDirectory()) {
+        return candidate
+      }
+    }
+    const parent = path.dirname(dir)
+    if (parent === dir) {
+      break
+    }
+    dir = parent
+  }
+
+  // 4) Extra fallbacks for common layouts
+  const fallbackCandidates = [
+    path.resolve(fileDir, '../drizzle'),
+    path.resolve(fileDir, '../../drizzle'),
+    path.resolve(fileDir, '../../../drizzle'),
+  ]
+  for (const c of fallbackCandidates) {
+    if (fs.existsSync(c) && fs.statSync(c).isDirectory()) {
+      return c
+    }
+  }
+
+  throw new Error('[auth-svc] Unable to locate migrations folder "drizzle" starting from ' + fileDir)
+}
+
 export async function applyMigrations(config: AuthServerConfig) {
   const connectionStr = getConnectionStr(config)
   const migrationClient = postgres(connectionStr, { max: 1, ssl: (config.db.ssl as unknown as any) })
-  const migrationsFolder = path.resolve(config.db.migrationsFolder)
+  const migrationsFolder = resolveMigrationsFolder(config)
 
   console.log('auth @ migrationFolder', migrationsFolder)
 

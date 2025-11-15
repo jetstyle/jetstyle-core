@@ -1,18 +1,18 @@
+import { Pencil } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import React, { useContext, useState, useEffect } from 'react'
-import { Pencil } from 'lucide-react'
+
 import {
   deleteResource,
   fetchConfig,
   fetchResource
 } from '../helpers/api'
 import useTenant from './../hooks/useTenant'
-
-import DownloadIcon from './icons/Download'
-import DeleteIcon from './icons/Delete'
-import CopyIcon from './icons/Copy'
 import ConfirmModal from './confirm-modal/ConfirmModal'
 import Drawer from './Drawer'
+import CopyIcon from './icons/Copy'
+import DeleteIcon from './icons/Delete'
+import DownloadIcon from './icons/Download'
 
 type ActionsProps = {
   instance: any
