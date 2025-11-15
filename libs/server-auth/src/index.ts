@@ -1,11 +1,11 @@
+import bcrypt from 'bcrypt'
 import { type KeyLike, jwtVerify, importSPKI } from 'jose'
 
 import { TResult, Ok, Err, arrayIntersection } from '@jetstyle/utils'
-import bcrypt from 'bcrypt'
 
 import config from './config.js'
-import type { DB } from './types.js'
 import { findBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt } from './model.js'
+import type { DB } from './types.js'
 
 export type TAccessTokenPayload = {
   sub: string
