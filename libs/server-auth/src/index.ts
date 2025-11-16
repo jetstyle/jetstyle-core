@@ -2,10 +2,10 @@ import bcrypt from 'bcrypt'
 import { type KeyLike, jwtVerify, importSPKI } from 'jose'
 
 import { TResult, Ok, Err, arrayIntersection } from '@jetstyle/utils'
-
 import config from './config.js'
-import { findBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt } from './model.js'
 import type { DB } from './types.js'
+import { findBasicAuthAccountByLogin, incrementLoginAttempt, resetLoginAttempt, findApiKeyByPrefix, markApiKeyUsed, findUserByUuid } from './model.js'
+import { splitFullApiKey, verifyApiKeySecret } from './model/api-keys.js'
 
 export type TAccessTokenPayload = {
   sub: string
@@ -117,8 +117,9 @@ export async function getPermissions<T extends DB>(
     }
   }
 
+
   // Basic HTTP Auth path: if DB accessors wired, validate against DB and use bcrypt compare internally
-  const [authType, authCreds] = authHeader.split(' ')
+  const [authType, authCreds] = (authHeader ?? '').split(' ')
   if (authType === 'Basic' && authCreds && db) {
     try {
       const decoded = Buffer.from(authCreds, 'base64').toString('utf-8')
@@ -146,7 +147,52 @@ export async function getPermissions<T extends DB>(
     return { level: 'denied', tenants: [] }
   }
 
-  const token = parseAuthHeader(authHeader)
+  // API Key path: Authorization: ApiKey <key>
+  let apiKeyHeader: string | undefined
+  if (authHeader) {
+    const [type, token] = authHeader.split(' ')
+    if (type === 'ApiKey' && token) { apiKeyHeader = token }
+  }
+
+  if (apiKeyHeader && db) {
+    const keyText = apiKeyHeader.trim()
+    const parts = splitFullApiKey(keyText)
+    if (parts) {
+      const { prefix, secret } = parts
+      const keyRec = await findApiKeyByPrefix(db, prefix)
+      if (keyRec && keyRec.status === 'active') {
+        const ok = await verifyApiKeySecret(secret, keyRec.secretHash)
+        if (ok) {
+          await markApiKeyUsed(db, keyRec.uuid)
+          const user = await findUserByUuid(db, keyRec.userId)
+          if (!user) {
+            return { level: 'denied', tenants: [] }
+          }
+          const effectiveScopes = (keyRec.scopes && keyRec.scopes.length > 0)
+            ? keyRec.scopes
+            : user.scopes
+
+          const fullRequiredRoles = config.fullAccessScopes.concat(requiredRoles).filter(Boolean)
+          const hasRequiredRoles = arrayIntersection(fullRequiredRoles, effectiveScopes)
+
+          const tenantsAllowed = Array.from(new Set([
+            ...(keyRec.tenants?.list ?? []),
+            user.tenant,
+          ].filter(Boolean)))
+
+          if (hasRequiredRoles.length > 0) {
+            return { level: 'allowed', tenants: tenantsAllowed }
+          }
+
+          return { level: 'denied', tenants: tenantsAllowed }
+        }
+      }
+    }
+    // fallthrough to JWT if API key invalid
+  }
+
+
+  const token = authHeader ? parseAuthHeader(authHeader) : null
   if (!token) {
     return {
       level: 'denied',
@@ -173,9 +219,6 @@ export async function getPermissions<T extends DB>(
     ...(parsedToken.tenant ? [parsedToken.tenant] : []),
     ...tenantsAllowedFromMap,
   ]))
-
-  // console.log('@ parsedToken', parsedToken)
-  // console.log('@ hasRequiredRoles', hasRequiredRoles)
 
   if (hasRequiredRoles.length > 0) {
     return {
