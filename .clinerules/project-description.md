@@ -1,0 +1,1 @@
+This project is a collection of Open Source modules initially developed by JetStyle to be reused across different products. Built with type safety in mind, places in a single mono repository with demo task tracker application to make sure all components work together.

@@ -2,6 +2,9 @@ import { z } from '@hono/zod-openapi'
 import { pgTable, serial, varchar, timestamp, text, jsonb, integer } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 
+// JSONB helpers
+const apiKeyTenantsZod = z.object({ list: z.array(z.string()) }).nullable().optional()
+
 // *********************************************
 export const TableUsers = pgTable('users', {
   id: serial('id').primaryKey(),
@@ -102,3 +105,62 @@ export const BasicAuthAccountSelectSchema = createSelectSchema(TableBasicAuthAcc
   .extend({
     roles: z.array(z.string()).nullable().optional()
   })
+
+// ****************************************************************************
+// API Keys
+
+export const TableApiKeys = pgTable('api_keys', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  userId: varchar('user_id', { length: 256 }).notNull(),
+  label: varchar('label', { length: 256 }),
+
+  // Storage model: key visible to user is "<prefix>.<secret>"
+  // We store only prefix and bcrypt hash(secret)
+  prefix: varchar('prefix', { length: 64 }).notNull().unique(),
+  secretHash: varchar('secret_hash', { length: 256 }).notNull(),
+
+  status: varchar('status', { length: 64, enum: ['active', 'inactive'] }).notNull().default('active'),
+
+  scopes: jsonb('scopes').$type<Array<string>>().default([]),
+  tenants: jsonb('tenants').$type<{ list: Array<string> } | null>().default(null),
+
+  lastUsedAt: timestamp('last_used_at'),
+})
+
+export const ApiKeyInsertSchema = createInsertSchema(TableApiKeys)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+    scopes: true,
+    tenants: true,
+    lastUsedAt: true,
+    prefix: true,
+    secretHash: true,
+  })
+  .extend({
+    scopes: z.array(z.string()).nullable().optional(),
+    tenants: apiKeyTenantsZod,
+  })
+
+export type NewApiKey = typeof TableApiKeys.$inferInsert
+export type ApiKey = typeof TableApiKeys.$inferSelect
+export type NewApiKeyRequest = z.infer<typeof ApiKeyInsertSchema>
+
+export const ApiKeySelectSchema = createSelectSchema(TableApiKeys)
+  .omit({
+    secretHash: true,
+    scopes: true,
+    tenants: true,
+  })
+  .extend({
+    scopes: z.array(z.string()).nullable().optional(),
+    tenants: apiKeyTenantsZod,
+  })
+
+export const ApiKeyPatchSchema = ApiKeyInsertSchema.partial()

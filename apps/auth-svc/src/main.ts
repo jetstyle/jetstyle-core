@@ -16,7 +16,8 @@ import {
   usersRoutes,
   basicAuthAccountsRoutes,
   contactsApp,
-  permissionBindsApp
+  permissionBindsApp,
+  apiKeysRoutes,
 } from './routes/index.js'
 import defaultSeedFunc from './seed.js'
 
@@ -50,6 +51,7 @@ async function startServer(authServer: AuthServer) {
     .route('/auth/permission-binds', permissionBindsApp)
     .route('/auth/contacts', contactsApp)
     .route('/auth/basic-auth-accounts', basicAuthAccountsRoutes)
+    .route('/auth/api-keys', apiKeysRoutes)
     .get('/auth/swagger', swaggerUI({ url: '/auth/doc' }))
 
   app.doc('/auth/doc', {
