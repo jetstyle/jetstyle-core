@@ -117,7 +117,6 @@ export async function getPermissions<T extends DB>(
     }
   }
 
-
   // Basic HTTP Auth path: if DB accessors wired, validate against DB and use bcrypt compare internally
   const [authType, authCreds] = (authHeader ?? '').split(' ')
   if (authType === 'Basic' && authCreds && db) {
@@ -190,7 +189,6 @@ export async function getPermissions<T extends DB>(
     }
     // fallthrough to JWT if API key invalid
   }
-
 
   const token = authHeader ? parseAuthHeader(authHeader) : null
   if (!token) {
