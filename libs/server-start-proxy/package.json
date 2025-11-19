@@ -4,8 +4,7 @@
   "description": "Reusable HTTP+WS start proxy to route local monorepo apps by path to ports",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./types": "./src/types.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",

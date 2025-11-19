@@ -15,12 +15,8 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "core:dev": "tsx watch src/index.ts",
-    "core:dev:docker": "tsx watch src/index.ts",
-    "start": "node dist/main.js",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix .",
-    "create-migration": "npx drizzle-kit generate"
+    "lint:fix": "eslint --fix ."
   },
   "dependencies": {
     "@hono/zod-openapi": "^0.14.3",
