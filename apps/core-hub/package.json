@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "core:dev": "next dev",
+    "core:start": "next start",
     "build": "tsc",
-    "build:production": "next build",
-    "start": "next start",
+    "core:build:production": "next build",
     "lint": "next lint",
     "lint:fix": "eslint --fix ."
   },
