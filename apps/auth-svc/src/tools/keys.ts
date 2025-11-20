@@ -13,14 +13,14 @@ const { privateKey, publicKey } = generateKeyPairSync('rsa', {
   },
 })
 
-console.log('Private Key:', privateKey)
-console.log('Public Key:', publicKey)
+// console.log('Private Key:', privateKey)
+// console.log('Public Key:', publicKey)
 
 // Assuming you have the `privateKey` and `publicKey` variables from the previous step
 const privateKeyBase64 = Buffer.from(privateKey, 'utf8').toString('base64')
 const publicKeyBase64 = Buffer.from(publicKey, 'utf8').toString('base64')
 
 console.log('\n')
-console.log('privateKeyBase64:', privateKeyBase64)
+console.log('private key:', privateKeyBase64)
 console.log('\n')
-console.log('publicKeyBase64:', publicKeyBase64)
+console.log('public key:', publicKeyBase64)
