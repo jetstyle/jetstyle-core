@@ -184,3 +184,33 @@ export type Contact = typeof TableContacts.$inferSelect
 export type NewContactRequest = z.infer<typeof ContactInsertSchema>
 
 export const ContactSelectSchema = createSelectSchema(TableContacts)
+
+// ****************************************************************************
+// Auth keys storage
+
+export const TableAuthKeys = pgTable('auth_keys', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  tenant: varchar('tenant', { length: 256 }).notNull(),
+
+  keyType: varchar('key_type', { length: 256, enum: ['private', 'public'] }).notNull(),
+  value: text('value').notNull(),
+})
+
+export const AuthKeyInsertSchema = createInsertSchema(TableAuthKeys)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+
+export type NewAuthKey = typeof TableAuthKeys.$inferInsert
+export type AuthKey = typeof TableAuthKeys.$inferSelect
+export type NewAuthKeyRequest = z.infer<typeof AuthKeyInsertSchema>
+
+export const AuthKeySelectSchema = createSelectSchema(TableAuthKeys)
+export const AuthKeyPatchSchema = AuthKeyInsertSchema.partial()

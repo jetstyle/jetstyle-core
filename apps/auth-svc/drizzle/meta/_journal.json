@@ -64,6 +64,13 @@
       "when": 1760117250555,
       "tag": "0008_cuddly_morg",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1764270024807,
+      "tag": "0009_third_prowler",
+      "breakpoints": true
     }
   ]
 }

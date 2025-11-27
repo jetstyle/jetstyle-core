@@ -20,12 +20,71 @@ import {
   apiKeysRoutes,
 } from './routes/index.js'
 import defaultSeedFunc from './seed.js'
+import { Buffer } from 'buffer'
+import { generateKeyPairSync, randomUUID } from 'node:crypto'
+import { eq } from 'drizzle-orm'
+import { TableAuthKeys } from './schema.js'
+import type { DB } from './db.js'
+import type { AuthServerConfig } from './types.js'
 
 declare module 'hono' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   interface ContextVariableMap {
     authServer: AuthServer
   }
+}
+
+async function ensureKeys(db: DB, cfg: AuthServerConfig) {
+  // If ENV provided, use them as-is
+  if (cfg.privateKey && cfg.publicKey) {
+    console.log('[auth-svc] JWT keys provided via ENV')
+    return
+  }
+
+  // Try to load from DB (stored as base64-encoded PEM per tools/keys.ts)
+  const tenantName = cfg.adminTenant ?? 'platform'
+  const rows = await db.select()
+    .from(TableAuthKeys)
+    .where(eq(TableAuthKeys.tenant, tenantName))
+
+  const priv = rows.find(r => r.keyType === 'private')
+  const pub = rows.find(r => r.keyType === 'public')
+
+  if (priv?.value && pub?.value) {
+    cfg.privateKey = priv.value
+    cfg.publicKey = pub.value
+    console.log('[auth-svc] JWT keys loaded from DB')
+    return
+  }
+
+  // Generate new RSA keypair and persist to DB
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  })
+
+  const privateKeyBase64 = Buffer.from(privateKey, 'utf8').toString('base64')
+  const publicKeyBase64 = Buffer.from(publicKey, 'utf8').toString('base64')
+
+  await db.insert(TableAuthKeys).values([
+    {
+      uuid: randomUUID().toString(),
+      tenant: tenantName,
+      keyType: 'private' as const,
+      value: privateKeyBase64,
+    },
+    {
+      uuid: randomUUID().toString(),
+      tenant: tenantName,
+      keyType: 'public' as const,
+      value: publicKeyBase64,
+    },
+  ])
+
+  cfg.privateKey = privateKeyBase64
+  cfg.publicKey = publicKeyBase64
+  console.log('[auth-svc] JWT keys generated and stored in DB')
 }
 
 async function startServer(authServer: AuthServer) {
@@ -84,6 +143,9 @@ export async function main(options?: AuthSvcOptions) {
 
   const db = createDbConnection(config)
   console.log('DB connection: ok')
+
+  await ensureKeys(db, config)
+  console.log('JWT keys ready')
 
   process.on('uncaughtException', (err) => {
     console.log('uncaughtException', err.toString())
