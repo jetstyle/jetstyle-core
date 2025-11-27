@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute, z } from '@hono/zod-openapi'
-import { eq, or, exists, and, sql } from 'drizzle-orm'
+import { eq, or, exists, and, sql, ilike } from 'drizzle-orm'
 
 import {
   ListQueryValidator,
@@ -30,13 +30,17 @@ import {
 
 const app = new OpenAPIHono()
 
+const UserListQueryValidator = ListQueryValidator.extend({
+  search: z.string().optional(),
+})
+
 export const usersRoutes = app.openapi(
   createRoute({
     method: 'get',
     tags: ['Users'],
     path: '/',
     request: {
-      query: ListQueryValidator
+      query: UserListQueryValidator
     },
     responses: {
       200: {
@@ -69,7 +73,18 @@ export const usersRoutes = app.openapi(
       query.tenant = permission.tenant
     }
 
-    const resp = await crudList<User>(db, TableUsers, query)
+    const search = query.search
+    let searchWhere: any = undefined
+    if (search && search.length > 0) {
+      const like = `%${search}%`
+      searchWhere = or(
+        ilike(TableUsers.username, like),
+        ilike(TableUsers.email, like),
+        ilike(TableUsers.uuid, like),
+      )
+    }
+
+    const resp = await crudList<User>(db, TableUsers, query, searchWhere)
     return c.json(resp, 200)
   }
 )
@@ -125,7 +140,7 @@ export const usersRoutes = app.openapi(
       tags: ['All users on all tenants'],
       path: '/all-users',
       request: {
-        query: ListQueryValidator
+        query: UserListQueryValidator
       },
       responses: {
         200: {
@@ -156,7 +171,18 @@ export const usersRoutes = app.openapi(
         query.tenant = undefined
       }
 
-      const resp = await crudList<User>(db, TableUsers, query)
+      const search = query.search
+      let searchWhere: any = undefined
+      if (search && search.length > 0) {
+        const like = `%${search}%`
+        searchWhere = or(
+          ilike(TableUsers.username, like),
+          ilike(TableUsers.email, like),
+          ilike(TableUsers.uuid, like),
+        )
+      }
+
+      const resp = await crudList<User>(db, TableUsers, query, searchWhere)
       return c.json(resp, 200)
     }
   )
@@ -166,7 +192,7 @@ export const usersRoutes = app.openapi(
       tags: ['Users'],
       path: '/by-tenant',
       request: {
-        query: ListQueryValidator
+        query: UserListQueryValidator
       },
       responses: {
         200: {
@@ -219,6 +245,17 @@ export const usersRoutes = app.openapi(
               )
           )
         )
+      }
+
+      const search = query.search
+      if (search && search.length > 0) {
+        const like = `%${search}%`
+        const searchWhere = or(
+          ilike(TableUsers.username, like),
+          ilike(TableUsers.email, like),
+          ilike(TableUsers.uuid, like),
+        )
+        customWhere = customWhere ? and(customWhere, searchWhere) : searchWhere
       }
 
       const resp = await crudList<User>(
@@ -457,7 +494,7 @@ export const usersRoutes = app.openapi(
           description: 'Update a User',
           content: {
             'application/json': {
-              schema: UserInsertSchema
+              schema: UserPatchSchema
             }
           }
         },
