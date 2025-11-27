@@ -154,4 +154,38 @@ app.openapi(
   }
 )
 
+app.openapi(
+  createRoute({
+    method: 'get',
+    path: '/by-user/{userId}',
+    tags: ['PermissionBinds'],
+    request: {
+      params: z.object({
+        userId: z.string()
+      }),
+    },
+    responses: {
+      200: {
+        description: 'PermissionBinds for the given user',
+        content: {
+          'application/json': {
+            schema: z.object({
+              result: z.array(PermissionBindSelectSchema),
+            })
+          }
+        }
+      }
+    }
+  }),
+  async (c) => {
+    const db = getDbConnection()
+    const { userId } = c.req.valid('param')
+    const rows = await db
+      .select()
+      .from(TablePermissionBinds)
+      .where(eq(TablePermissionBinds.userId, userId))
+    return c.json({ result: rows }, 200)
+  }
+)
+
 export default app
