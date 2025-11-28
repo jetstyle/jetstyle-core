@@ -16,6 +16,20 @@ function getConnectionStr(config: AuthServerConfig) {
   return `postgres://${config.db.username}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.database}`
 }
 
+function resolveSslOpt(sslEnv: unknown): any | undefined {
+  if (sslEnv == null) {
+    return undefined
+  }
+  const v = String(sslEnv).trim().toLowerCase()
+  if (v === '' || v === 'disable' || v === 'false' || v === '0' || v === 'off' || v === 'none') {
+    return undefined
+  }
+  if (v === 'require' || v === 'true' || v === '1' || v === 'on') {
+    return 'require'
+  }
+  return sslEnv as any
+}
+
 function resolveMigrationsFolder(config: AuthServerConfig) {
   // 1) Explicit ENV override (kept for backward compatibility); relative to CWD by design
   const override = process.env.AUTH_SVC__MIGRATIONS
@@ -78,7 +92,7 @@ function resolveMigrationsFolder(config: AuthServerConfig) {
 
 export async function applyMigrations(config: AuthServerConfig) {
   const connectionStr = getConnectionStr(config)
-  const migrationClient = postgres(connectionStr, { max: 1, ssl: (config.db.ssl as unknown as any) })
+  const migrationClient = postgres(connectionStr, { max: 1, ssl: resolveSslOpt(config.db.ssl) })
   const migrationsFolder = resolveMigrationsFolder(config)
 
   console.log('auth @ migrationFolder', migrationsFolder)
@@ -97,7 +111,7 @@ let GLOBAL_CONNECTION: DB | undefined
 export function createDbConnection(config: AuthServerConfig): DB {
   const connectionStr = getConnectionStr(config)
   try {
-    const queryClient = postgres(connectionStr, { ssl: (config.db.ssl as unknown as any) })
+    const queryClient = postgres(connectionStr, { ssl: resolveSslOpt(config.db.ssl) })
     const db = drizzle(queryClient, { schema })
     GLOBAL_CONNECTION = db
     console.log('Database connected successfully')
