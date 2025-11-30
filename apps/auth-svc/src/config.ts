@@ -19,7 +19,7 @@ export const config: AuthServerConfig = {
   isSecureCookie: false,
   cookieLiveTime: 60 * 60 * 24 * 400, // 400 дней
   codeLiveTime: 1000 * 60 *10,        // 10 мин (TODO - 4 testing - update to real value)
-  codeBondTime: 1000 * 60 *10,        // 10 мин (TODO - 4 testing - update to real value)
+  codeBondTime: 1000,        // 1 сек (TODO - 4 testing - update to real value)
   password: {
     saltRounds: 11,
   },
