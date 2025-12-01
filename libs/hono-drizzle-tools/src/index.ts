@@ -21,7 +21,7 @@ export function genUuid() {
 }
 
 export const ListQueryValidator = z.object({
-  sortby: z.enum(['id', 'createdAt']).optional().default('id'),
+  sortby: z.enum(['id', 'createdAt', 'price']).optional().default('id'),
   sortdir: z.enum(['asc', 'desc']).optional().default('desc'),
   limit: z.coerce.number().int().min(1).max(MAX_LIST_LIMIT).optional().default(DEFAULT_LIMIT),
   offset: z.coerce.number().int().min(0).optional().default(0),
@@ -71,7 +71,8 @@ export async function crudList<T>(
   table: PgTable,
   query: TListQuery,
   customWhere: any = null,
-  omit?: Array<keyof T>
+  omit?: Array<keyof T>,
+  customOrderBy?: any
 ): Promise<TListResp<T>> {
   const sortOp = query.sortdir === 'asc' ? asc : desc
   const sortProp = table[query.sortby]
@@ -92,10 +93,15 @@ export async function crudList<T>(
     req = req.where(customWhere)
   }
 
+  if (customOrderBy) {
+    req = req.orderBy(customOrderBy, asc(table.id))
+  } else {
+    req = req.orderBy(sortOp(sortProp))
+  }
+
   const result = (await req
     .limit(query.limit)
-    .offset(query.offset)
-    .orderBy(sortOp(sortProp))) as Array<T>
+    .offset(query.offset)) as Array<T>
 
   const sanitizedResult = omit
     ? result.map((row) => {
