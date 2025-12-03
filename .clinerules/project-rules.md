@@ -23,7 +23,7 @@ This monorepo hosts all npm packages prefixed with `@project-name/` or `@jetstyl
 # Technology Stack
 
 ## Frontend Stack
-- Frameworks: Vite + React + TypeScript + Tailwind; Next.js (with TypeScript + Tailwind) for server rendering as required
+- Frameworks: Next.js + React + TypeScript + Tailwind
 - Styling/UI: Tailwind CSS, shadcn/ui
 - Icons: Lucide
 - Animation: Motion
