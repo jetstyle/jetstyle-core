@@ -56,6 +56,52 @@ export const UserPatchSchema = UserInsertSchema.partial()
 
 // ****************************************************************************
 
+export const TableTenants = pgTable('tenants', {
+  id: serial('id').primaryKey(),
+  uuid: varchar('uuid', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+
+  name: varchar('name', { length: 256 }).notNull(),
+  displayName: varchar('display_name', { length: 256 }).notNull(),
+  ownerUserId: varchar('owner_user_id', { length: 256 }),
+
+  tenantType: varchar('tenant_type', {
+    length: 256,
+    enum: ['tenant-management', 'customer-tenant']
+  }).notNull(),
+
+  logoAssetId: varchar('logo_asset_id', { length: 256 }),
+  logoUrl: varchar('logo_url', { length: 512 }),
+
+  parentTenantName: varchar('parent_tenant_name', { length: 256 }),
+
+  allowedRegistrationDomains: text('allowed_registration_domains')
+})
+
+export const TenantInsertSchema = createInsertSchema(TableTenants)
+  .omit({
+    id: true,
+    uuid: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    allowedRegistrationDomains: z.string().nullable().optional()
+  })
+
+export const TenantPatchSchema = TenantInsertSchema.partial()
+export type NewTenant = typeof TableTenants.$inferInsert
+export type Tenant = typeof TableTenants.$inferSelect
+export type NewTenantRequest = z.infer<typeof TenantInsertSchema>
+
+export const TenantSelectSchema = createSelectSchema(TableTenants)
+  .extend({
+    allowedRegistrationDomains: z.string().nullable().optional()
+  })
+
+// ****************************************************************************
+
 export const TableBasicAuthAccounts = pgTable('basic_auth_accounts', {
   id: serial('id').primaryKey(),
   uuid: varchar('uuid', { length: 256 }).notNull(),
