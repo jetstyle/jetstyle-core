@@ -7,6 +7,8 @@ import {
 
 export * from '@jetstyle/server-auth/schema'
 
+// Core user/tenant schemas live in @jetstyle/server-auth to stay reusable.
+
 export const TableRefreshTokens = pgTable('refresh_tokens', {
   id: serial('id').primaryKey(),
   uuid: varchar('uuid', { length: 256 }).notNull(),
@@ -40,43 +42,6 @@ export type RefreshToken = typeof TableRefreshTokens.$inferSelect
 export type NewRefreshTokenRequest = z.infer<typeof RefreshTokenInsertSchema>
 
 export const RefreshTokenSelectSchema = createSelectSchema(TableRefreshTokens)
-
-// ****************************************************************************
-
-export const TableTenants = pgTable('tenants', {
-  id: serial('id').primaryKey(),
-  uuid: varchar('uuid', { length: 256 }).notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-
-  name: varchar('name', { length: 256 }).notNull(),
-  displayName: varchar('display_name', { length: 256 }).notNull(),
-  ownerUserId: varchar('owner_user_id', { length: 256 }),
-
-  tenantType: varchar('tenant_type', {
-    length: 256,
-    enum: ['tenant-management', 'customer-tenant']
-  }).notNull(),
-
-  logoAssetId: varchar('logo_asset_id', { length: 256 }),
-  logoUrl: varchar('logo_url', { length: 512 }),
-
-  parentTenantName: varchar('parent_tenant_name', { length: 256 })
-})
-
-export const TenantInsertSchema = createInsertSchema(TableTenants)
-  .omit({
-    id: true,
-    uuid: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-
-export type NewTenant = typeof TableTenants.$inferInsert
-export type Tenant = typeof TableTenants.$inferSelect
-export type NewTenantRequest = z.infer<typeof TenantInsertSchema>
-
-export const TenantSelectSchema = createSelectSchema(TableTenants)
 
 // ****************************************************************************
 
