@@ -21,7 +21,7 @@ export function genUuid() {
 }
 
 export const ListQueryValidator = z.object({
-  sortby: z.enum(['id', 'createdAt', 'price']).optional().default('id'),
+  sortby: z.enum(['id', 'createdAt']).optional().default('id'),
   sortdir: z.enum(['asc', 'desc']).optional().default('desc'),
   limit: z.coerce.number().int().min(1).max(MAX_LIST_LIMIT).optional().default(DEFAULT_LIMIT),
   offset: z.coerce.number().int().min(0).optional().default(0),
