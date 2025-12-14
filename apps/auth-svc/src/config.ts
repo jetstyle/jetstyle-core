@@ -5,7 +5,7 @@ import type { AuthServerConfig } from './types.js'
 dotenv.config()
 
 export const config: AuthServerConfig = {
-  port: 8091,
+  port: process.env.AUTH_SVC__PORT ? Number(process.env.AUTH_SVC__PORT) : 8091,
   authMethods: ['username-password', 'email-password'],
   authSvcSelfUrl: process.env.AUTH_SVC__SELF_URL ?? 'http://localhost:8080',
   privateKey: process.env.AUTH_SVC__PRIVATE_KEY ?? '',
