@@ -55,6 +55,24 @@ export type DeleteResourceOptions = {
   getAccessToken?: () => Promise<string | null>
 }
 
+export type UploadResourceProgressEvent = {
+  loaded: number
+  total?: number
+  percent?: number
+}
+
+export type UploadResourceOptions = {
+  apiPath: string
+  // should be FormData
+  toSubmit: any
+  query?: Record<string, string>
+  // Optional custom token getter that returns a full Authorization header value,
+  // e.g. "Bearer x.y.z" or "Basic base64"
+  getAccessToken?: () => Promise<string | null>
+  onProgress?: (e: UploadResourceProgressEvent) => void
+  signal?: AbortSignal
+}
+
 export type AuthParsedToken = {
   // reverse-domain audience
   aud: string
