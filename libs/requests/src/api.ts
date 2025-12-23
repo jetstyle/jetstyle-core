@@ -1,6 +1,6 @@
 import { getAccessToken as defaultGetAccessToken } from './auth'
 import { dataLayer } from './index'
-import type { DeleteResourceOptions, FetchResourceOptions, PatchResourceOptions, PostResourceOptions, TResult } from './types'
+import type { DeleteResourceOptions, FetchResourceOptions, PatchResourceOptions, PostResourceOptions, TResult, UploadResourceOptions } from './types'
 import { Err, Ok, getTenant } from './utils'
 
 function buildUrl(apiPath: string, query: Record<string, any> = {}): string {
@@ -180,6 +180,93 @@ export async function deleteResource<T>({
     return Err('request_error', JSON.stringify(body))
   } catch (err: any) {
     console.log('deleteResource @ err', err)
+    return Err('request_error', err.toString())
+  }
+}
+
+export async function uploadResource<T>({
+  apiPath,
+  toSubmit,
+  query = {},
+  getAccessToken,
+  onProgress,
+  signal,
+}: UploadResourceOptions): Promise<TResult<T>> {
+  try {
+    const url = buildUrl(apiPath, query)
+    const isFormData = toSubmit instanceof FormData
+    if (!isFormData) {
+      return Err('invalid_payload', 'uploadResource expects FormData')
+    }
+
+    const customHeader = getAccessToken ? await getAccessToken() : null
+    const defaultToken = customHeader ? null : await defaultGetAccessToken()
+    const authHeader = customHeader ? customHeader : (defaultToken ? `Bearer ${defaultToken}` : null)
+
+    const res = await new Promise<TResult<T>>((resolve) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', url, true)
+      xhr.responseType = 'json'
+      if (authHeader) {
+        xhr.setRequestHeader('Authorization', authHeader)
+      }
+
+      const abort = () => {
+        try { xhr.abort() } catch { /* noop */ }
+      }
+      if (signal) {
+        if (signal.aborted) {
+          abort()
+          resolve(Err('aborted'))
+          return
+        }
+        signal.addEventListener('abort', abort, { once: true })
+      }
+
+      xhr.upload.onprogress = (evt) => {
+        if (!onProgress) {
+          return
+        }
+        const total = typeof evt.total === 'number' && evt.total > 0 ? evt.total : undefined
+        const loaded = typeof evt.loaded === 'number' ? evt.loaded : 0
+        const percent = total ? (loaded / total) * 100 : undefined
+        onProgress({ loaded, total, percent })
+      }
+
+      xhr.onerror = () => {
+        resolve(Err('request_error'))
+      }
+
+      xhr.onabort = () => {
+        resolve(Err('aborted'))
+      }
+
+      xhr.onload = () => {
+        const body = (xhr.response ?? null) as any
+        if (xhr.status === 200 || xhr.status === 201) {
+          resolve(Ok(body as T))
+          return
+        }
+        if (body && typeof body === 'object' && typeof body.err === 'string') {
+          resolve(Err(body.err, body.errDescription))
+          return
+        }
+        const text = (() => {
+          try {
+            return xhr.responseText
+          } catch {
+            return ''
+          }
+        })()
+        resolve(Err(`HTTP_${xhr.status}`, text))
+      }
+
+      xhr.send(toSubmit)
+    })
+
+    return res
+  } catch (err: any) {
+    console.log('uploadResource @ err', err)
     return Err('request_error', err.toString())
   }
 }
