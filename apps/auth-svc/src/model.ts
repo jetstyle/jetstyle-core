@@ -264,7 +264,7 @@ export class AuthServer {
     }
 
     const tenant = await this.getTenant(user.tenant)
-    console.log('authServer @ tenant', tenant)
+    // console.log('authServer @ tenant', tenant)
 
     // Create the JWT payload with OpenID standard claims + custom attributes
     let tenants = await collectAllUserTenantPermissions(user)

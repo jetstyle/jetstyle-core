@@ -61,7 +61,7 @@ export const tenantsRoutes = app.openapi(
       return c.json(ErrForbidden, 403)
     }
 
-    console.log('tenant:crud @ permission', permission)
+    // console.log('tenant:crud @ permission', permission)
 
     if (permission.tenant) {
       if (query.tenant && query.tenant !== permission.tenant) {
@@ -77,7 +77,8 @@ export const tenantsRoutes = app.openapi(
       )
     }
 
-    console.log('@query', query)
+    // console.log('@query', query)
+
     query.tenant = undefined // Tenant has no tenant field
     const resp = await crudList<Tenant>(db, TableTenants, query, customWhere)
     return c.json(resp, 200)
