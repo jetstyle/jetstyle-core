@@ -686,7 +686,7 @@ export const authRoutes = app.openapi(
 
       const refreshToken = body.refreshToken ?? getCookie(c, 'refreshToken')
 
-      console.log('@ refreshToken', refreshToken)
+      // console.log('@ refreshToken', refreshToken)
 
       if (!refreshToken) {
         return c.json({ err: 'no_refresh_token' }, 401)
