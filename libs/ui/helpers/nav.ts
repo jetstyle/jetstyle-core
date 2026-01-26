@@ -21,7 +21,7 @@ export function getTenant() {
   return parseLocation()?.tenant ?? ''
 }
 
-export function createUri(abspath) {
+export function createUri(abspath: string) {
   const parsed = parseLocation()
 
   if (!parsed) {
@@ -30,6 +30,20 @@ export function createUri(abspath) {
 
   const newPath = abspath[0] === '/' ? abspath : `/${abspath}`
   return `/${parsed.locale}/${TENANT_SEGMENT}/${parsed.tenant}${newPath}`
+}
+
+export function useCreateUri() {
+  const pathname = usePathname()
+  const parsed = parseLocation(pathname ?? '')
+
+  return (abspath: string) => {
+    if (!parsed) {
+      return abspath
+    }
+
+    const newPath = abspath[0] === '/' ? abspath : `/${abspath}`
+    return `/${parsed.locale}/${TENANT_SEGMENT}/${parsed.tenant}${newPath}`
+  }
 }
 
 export function parseLocationChats(url) {
