@@ -1,3 +1,5 @@
+import type { TResult } from '@jetstyle/utils'
+
 export type AuthMethod = 'username-password'
   | 'email-password'
   | 'email-opt'
@@ -5,6 +7,14 @@ export type AuthMethod = 'username-password'
   | 'permanent-link'
   | 'magic-link'
   | 'github'
+
+export type SMSSender = {
+  sendSms(phone: string, text: string, extra?: { code: string }): Promise<TResult<boolean>>
+}
+
+export type EmailSender = {
+  sendEmail(email: string, text: string, extra?: { code: string }): Promise<TResult<boolean>>
+}
 
 export type AuthServerConfig = {
   port: number

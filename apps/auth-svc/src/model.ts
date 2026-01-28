@@ -26,6 +26,7 @@ import {
   TableBasicAuthAccounts,
 } from './schema.js'
 import type { AuthServerConfig } from './types.js'
+import type { EmailSender, SMSSender } from './types.js'
 
 export const LoginSchema = z.object({
   username: z.string().optional(),
@@ -50,14 +51,6 @@ export type UserWithTokens = {
   user: User
   accessToken: string
   refreshToken: string
-}
-
-type SMSSender = {
-  sendSms(phone: string, text: string): TResult<boolean>
-}
-
-type EmailSender = {
-  sendEmail(email: string, text: string): TResult<boolean>
 }
 
 type NewUserWithPassword = {
