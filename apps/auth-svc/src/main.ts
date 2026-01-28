@@ -25,7 +25,7 @@ import { generateKeyPairSync, randomUUID } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { TableAuthKeys } from './schema.js'
 import type { DB } from './db.js'
-import type { AuthServerConfig } from './types.js'
+import type { AuthServerConfig, EmailSender, SMSSender } from './types.js'
 
 declare module 'hono' {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -130,7 +130,9 @@ async function startServer(authServer: AuthServer) {
 }
 
 export type AuthSvcOptions = {
-  seedFunc: (authServer: AuthServer) => void
+  seedFunc?: (authServer: AuthServer) => void
+  emailSender?: EmailSender
+  smsSender?: SMSSender
 }
 
 export async function main(options?: AuthSvcOptions) {
@@ -151,7 +153,7 @@ export async function main(options?: AuthSvcOptions) {
     console.log('uncaughtException', err.toString())
   })
 
-  const authServer = new AuthServer(db, config)
+  const authServer = new AuthServer(db, config, options?.smsSender, options?.emailSender)
   startServer(authServer)
 
   console.log('Started')

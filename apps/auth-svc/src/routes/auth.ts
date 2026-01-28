@@ -152,7 +152,11 @@ export const authRoutes = app.openapi(
       const code = codeResult.value
 
       if (authServer.emailSender) {
-        const sendResult = authServer.emailSender.sendEmail(body.email, `Your verification code: ${code}`)
+        const sendResult = await authServer.emailSender.sendEmail(
+          body.email,
+          `Your verification code: ${code}`,
+          { code },
+        )
         if (sendResult.err !== null) {
           console.warn('[auth] failed to send verification email', sendResult.err)
         }
@@ -323,7 +327,11 @@ export const authRoutes = app.openapi(
       const code = codeResult.value
 
       if (authServer.emailSender) {
-        const sendResult = authServer.emailSender.sendEmail(body.email, `Your password change code: ${code}`)
+        const sendResult = await authServer.emailSender.sendEmail(
+          body.email,
+          `Your password change code: ${code}`,
+          { code },
+        )
         if (sendResult.err !== null) {
           console.warn('[auth] failed to send password change email', sendResult.err)
         }
