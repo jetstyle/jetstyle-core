@@ -18,6 +18,7 @@ export const TableUsers = pgTable('users', {
   username: varchar('username', { length: 256 }),
   password: varchar('password', { length: 256 }),
   email: varchar('email', { length: 256 }),
+  emailVerifiedAt: timestamp('email_verified_at').defaultNow(),
   phone: varchar('phone', { length: 256 }),
   locale: varchar('locale', { length: 256 }),
   geoRegion: varchar('geo_region', { length: 256 }),
@@ -34,6 +35,7 @@ export const UserInsertSchema = createInsertSchema(TableUsers)
     uuid: true,
     createdAt: true,
     updatedAt: true,
+    emailVerifiedAt: true,
     scopes: true,
   })
   .extend({
