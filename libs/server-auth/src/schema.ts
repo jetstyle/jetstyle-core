@@ -23,6 +23,13 @@ export const TableUsers = pgTable('users', {
   locale: varchar('locale', { length: 256 }),
   geoRegion: varchar('geo_region', { length: 256 }),
 
+  termsAcceptedAt: timestamp('terms_accepted_at'),
+  termsAcceptedVersion: varchar('terms_accepted_version', { length: 64 }),
+  privacyAcceptedAt: timestamp('privacy_accepted_at'),
+  privacyAcceptedVersion: varchar('privacy_accepted_version', { length: 64 }),
+  marketingOptedInAt: timestamp('marketing_opted_in_at'),
+  marketingOptedOutAt: timestamp('marketing_opted_out_at'),
+
   avatarFileId: varchar('avatar_file_id', { length: 256 }),
   avatarUrl: text('avatar_url'),
 
@@ -37,6 +44,12 @@ export const UserInsertSchema = createInsertSchema(TableUsers)
     updatedAt: true,
     emailVerifiedAt: true,
     scopes: true,
+    termsAcceptedAt: true,
+    termsAcceptedVersion: true,
+    privacyAcceptedAt: true,
+    privacyAcceptedVersion: true,
+    marketingOptedInAt: true,
+    marketingOptedOutAt: true,
   })
   .extend({
     scopes: z.array(z.string()).nullable().optional()
